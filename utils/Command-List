@@ -1,14 +1,20 @@
 Usage of image extraction:
     python extract_compressed_videos.py --data_path path/to/FaceForensics/ --dataset {FaceSwap, Deepfakes, Face2Face} --compression {c0, c23, c40}
     
+    This will extract images of the specified dataset in the specified compression.
+    The script must lie in the root directory of the FaceForensics dataset.
+    For 30 examples in the c40 compression, this will create ~10GB of images per dataset.
+    
 Usage of downsampling:
-    ./downsample.sh <base-path>
+    ./downsample.sh <base-path> e.g. ./downsample.sh manipulated_sequences/Deepfakes/c40/images/
+    
     base-path shall be the directory in which the different videos/images lie, e.g.
         FaceForensics\manipulated_sequences\Deepfakes\c40\images
             033_097
             123_456
             234_567
             345_678
+            
     It will create a subdirectory "downsampled" in every subdirectory, e.g. in 033_097/downsampled
     Into that directory every image of e.g. 033_097 will be downsampled with height of 120 and corresponding width that keeps the aspect ratio
     e.g. the file 037_097/0000.png is later found in downsampled/0000_-1:120.png
