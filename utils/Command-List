@@ -4,6 +4,8 @@ Usage of image extraction:
     This will extract images of the specified dataset in the specified compression.
     For 30 examples in the c40 compression, this will create ~10GB of images per dataset.
     
+    This program requires opencv installation, e.g. with conda install opencv
+    
 Usage of downsampling:
     ./downsample.sh <base-path> e.g. ./downsample.sh manipulated_sequences/Deepfakes/c40/images/
     
@@ -17,4 +19,6 @@ Usage of downsampling:
     It will create a subdirectory "downsampled" in every subdirectory, e.g. in 033_097/downsampled
     Into that directory every image of e.g. 033_097 will be downsampled with height of 120 and corresponding width that keeps the aspect ratio
     e.g. the file 037_097/0000.png is later found in downsampled/0000_-1:120.png
+    
+    This program requires ffmpeg installation, e.g. sudo apt-get install ffmpeg
             
