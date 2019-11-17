@@ -2,7 +2,6 @@ Usage of image extraction:
     python extract_compressed_videos.py --data_path path/to/FaceForensics/ --dataset {FaceSwap, Deepfakes, Face2Face} --compression {c0, c23, c40}
     
     This will extract images of the specified dataset in the specified compression.
-    The script must lie in the root directory of the FaceForensics dataset.
     For 30 examples in the c40 compression, this will create ~10GB of images per dataset.
     
 Usage of downsampling:
