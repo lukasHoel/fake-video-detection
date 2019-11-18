@@ -1,8 +1,10 @@
 Usage of image extraction:
-    python extract_compressed_videos.py --data_path path/to/FaceForensics/ --dataset {FaceSwap, Deepfakes, Face2Face} --compression {c0, c23, c40}
+    python extract_compressed_videos.py --data_path path/to/FaceForensics/ --dataset {FaceSwap, Deepfakes, Face2Face, original1, original2} --compression {c0, c23, c40}
     
     This will extract images of the specified dataset in the specified compression.
     For 30 examples in the c40 compression, this will create ~10GB of images per dataset.
+    
+    specifying original1 will exract images from original_sequences/actors and original2 from original_sequences/youtube
     
     This program requires opencv installation, e.g. with conda install opencv
     
