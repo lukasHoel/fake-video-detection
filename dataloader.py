@@ -1,4 +1,4 @@
-from skimage import io, transform
+from skimage import io
 from torch.utils import data
 import torch
 import os
@@ -109,7 +109,7 @@ class ToTensor(object):
         # numpy image: num_frames x H x W x C
         # torch image: num_frames x C X H X W
         images = images.transpose((0, 3, 1, 2))
-        return {'image': torch.from_numpy(images),
+        return {'images': torch.from_numpy(images),
                 'label': label,
                 'video_name': vid_name}
 
@@ -120,4 +120,7 @@ test_dataset = FaceForensicsVideosDataset(d, num_frames=4, skip_frames=5, transf
 dataset_loader = torch.utils.data.DataLoader(test_dataset,
                                              batch_size=4, shuffle=True,
                                              num_workers=4)
-print(test_dataset.__getitem__(3))
+sample = test_dataset.__getitem__(3)
+print("Video name: ", sample["video_name"])
+print("Label", sample["label"])
+print("Tensor shape: ", sample["images"].shape)
