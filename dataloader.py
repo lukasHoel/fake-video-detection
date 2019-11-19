@@ -1,4 +1,4 @@
-from skimage import io
+from skimage import io, transform
 from torch.utils import data
 import torch
 import os
@@ -31,8 +31,8 @@ class FaceForensicsVideosDataset(data.Dataset):
         ...
 
         For each folder of downsampled images, the frame numbers for all samples are generated and saved in self.frame_dir.
-        Each sample in this directory is a tuple (path to folder with the images, list of sample frames, label)
-        with the key being the number of the sample (numberd chronologically in the order they were generated)
+        Each sample in this directory is a tuple (path to folder with the images, list of sample frames, label, video name)
+        with the key being the number of the sample (numbered chronologically in the order they were generated)
         """
         self.num_frames = num_frames
         self.skip_frames = skip_frames
@@ -57,7 +57,7 @@ class FaceForensicsVideosDataset(data.Dataset):
                         frames = frame_numbers[i: i + self.get_whole_length() + 2:self.skip_frames + 1]
                         if len(frames) == self.num_frames:
                             # add sample to_frame_dir
-                            self.frame_dir[x] = (whole_path, frames, directories[path])
+                            self.frame_dir[x] = (whole_path, frames, directories[path], f)
                             x += 1
                         i += 1
                     i += (self.num_frames - overlap) * (self.skip_frames + 1) - skip_frames -1
@@ -74,12 +74,16 @@ class FaceForensicsVideosDataset(data.Dataset):
         """
         Returns one sample of the following form:
         {    image =(numpy array consisting of num_frames frames of downsampled images from one video),
-             label = (assigned label)}
+             label = (assigned label)
+             video_name = (name/number of video folder)}
         Every idx is connected to one sample, by being the key of the sample in self.frame_dir.
         This mapping from ids to samples is not random, but corresponds to the order of directories and frames in the video.
         Therefore samples need to be retrieved in a randomized order.
        """
-        path, frames, label = self.frame_dir[idx]
+        if torch.is_tensor(idx):
+            idx = idx.tolist()
+            
+        path, frames, label, vid_name = self.frame_dir[idx]
         images = []
         for f in frames:
             image_name = "{:04d}_-1x120.png".format(f)
@@ -88,7 +92,8 @@ class FaceForensicsVideosDataset(data.Dataset):
         # all as a numpy array
         image_matrix = np.stack(images)
 
-        sample = {'images': image_matrix, 'label': label }
+        sample = {'images': image_matrix, 'label': label, 'video_name': vid_name}
+
 
         if self.transform:
             sample = self.transform(sample)
@@ -98,19 +103,21 @@ class FaceForensicsVideosDataset(data.Dataset):
 class ToTensor(object):
     """Convert ndarrays in sample to Tensors."""
     def __call__(self, sample):
-        images, label = sample['images'], sample['label']
+        images, label, vid_name= sample['images'], sample['label'] , sample['video_name']
 
         # swap color axis because
         # numpy image: num_frames x H x W x C
         # torch image: num_frames x C X H X W
         images = images.transpose((0, 3, 1, 2))
         return {'image': torch.from_numpy(images),
-                'landmarks': torch.from_numpy(label)}
+                'label': label,
+                'video_name': vid_name}
 
 
 # test /example
 d = {"/home/anna/Desktop/Uni/WiSe19/DL4CV/data/FaceForensics/d1/manipulated_sequences/Face2Face/c40/images": True,"/home/anna/Desktop/Uni/WiSe19/DL4CV/data/FaceForensics/d1/manipulated_sequences/Face2Face/c40/images":False }
-test_dataset = FaceForensicsVideosDataset(d, num_frames=4, skip_frames=5, transform=ToTensor)
+test_dataset = FaceForensicsVideosDataset(d, num_frames=4, skip_frames=5, transform=ToTensor())
 dataset_loader = torch.utils.data.DataLoader(test_dataset,
                                              batch_size=4, shuffle=True,
                                              num_workers=4)
+print(test_dataset.__getitem__(3))
