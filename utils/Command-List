@@ -18,10 +18,10 @@ Usage of new image extraction (with Face Cropping):
     A sequence is a number of face-cropped images starting from a random frame number inside of the video with configurable number of
     frames to skip between two images.
     Videos will be saved in a subdirectory structure as follows:
-    <data_path>
-        <data_path>/videos
+    <root_of_dataset>
+        <root_of_dataset>/videos
             <here lie all videos to extract from, e.g. foo.mp4, bar.mp4>
-        <data_path>/sequences
+        <root_of_dataset>/sequences
             <foo>: subdirectory with the name of the original video (without datatype suffix e.g. without .mp4)
                 <0>: number of sequence
                     0000.png: first picture in this sequence
