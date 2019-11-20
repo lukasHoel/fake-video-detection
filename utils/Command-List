@@ -37,7 +37,7 @@ Usage of new image extraction (with Face Cropping):
                     0000.png
                     0001.png
 
-    :param data_path: path of source videos
+    :param data_path: path of FaceForensics root directory
     :param dataset: of which dataset to choose from. See DATASET_PATHS
     :param compression: of which compression level to choose from. See COMPRESSION
     :param num_sequences: how many sequences to extract. default: 5
