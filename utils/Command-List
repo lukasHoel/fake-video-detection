@@ -1,4 +1,52 @@
-Usage of image extraction:
+Usage of new image extraction (with Face Cropping):
+
+    requires installation of opencv (>3.x) and opencv-utils, e.g. pip install opencv-python, pip install opencv-utils
+
+    python extract_images.py --data_path path/to/FaceForensics/ --dataset {FaceSwap, Deepfakes, Face2Face, original1, original2} --compression {c0, c23, c40}
+    
+    additional parameters:
+        --num_sequences
+        --frames_per_sequence
+        --skip_frames
+        --size
+        --padding
+        
+    Detailed description:
+    
+    Extracts sequences from all videos in <data_path>/<dataset>/<compression>/videos into <data_path>/<dataset>/<compression>/sequences.
+    Will use the FaceForensics file structure to identify all videos of dataset type specified.
+    A sequence is a number of face-cropped images starting from a random frame number inside of the video with configurable number of
+    frames to skip between two images.
+    Videos will be saved in a subdirectory structure as follows:
+    <root_of_dataset>
+        <root_of_dataset>/videos
+            <here lie all videos to extract from, e.g. foo.mp4, bar.mp4>
+        <root_of_dataset>/sequences
+            <foo>: subdirectory with the name of the original video (without datatype suffix e.g. without .mp4)
+                <0>: number of sequence
+                    0000.png: first picture in this sequence
+                    0001.png: second picture in this sequence
+                <1>
+                    0000.png
+                    0001.png
+            <bar>
+                <0>
+                    0000.png
+                    0001.png
+                <1>
+                    0000.png
+                    0001.png
+
+    :param data_path: path of FaceForensics root directory
+    :param dataset: of which dataset to choose from. See DATASET_PATHS
+    :param compression: of which compression level to choose from. See COMPRESSION
+    :param num_sequences: how many sequences to extract. default: 5
+    :param frames_per_sequence: how many frames each sequence shall contain. default: 10
+    :param skip_frames: how many frames shall be skipped between two frames (to capture changes in expression) default: 5
+    :param size: how big each frame shall be. Is considered to give both width and height, thus resulting image is quadratic. default: 128
+    :param padding: how much padding shall be used around detected face crop in each direction (to capture all of the face) default: 30
+
+Usage of old image extraction (from FaceForensics Github):
     python extract_compressed_videos.py --data_path path/to/FaceForensics/ --dataset {FaceSwap, Deepfakes, Face2Face, original1, original2} --compression {c0, c23, c40}
     
     This will extract images of the specified dataset in the specified compression.
