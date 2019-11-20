@@ -23,15 +23,15 @@ def extract_from_directory(data_path, dataset, compression,
                            num_sequences=5, frames_per_sequence=10, skip_frames=5,
                            size=128, padding=30):
     """
-    Extracts sequences from all videos in <data_path>/videos into <data_path>/sequences.
+    Extracts sequences from all videos in <data_path>/<dataset>/<compression>/videos into <data_path>/<dataset>/<compression>/sequences.
     Will use the FaceForensics file structure to identify all videos of dataset type specified.
     A sequence is a number of face-cropped images starting from a random frame number inside of the video with configurable number of
     frames to skip between two images.
     Videos will be saved in a subdirectory structure as follows:
-    <data_path>
-        <data_path>/videos
+    <root_of_dataset>
+        <root_of_dataset>/videos
             <here lie all videos to extract from, e.g. foo.mp4, bar.mp4>
-        <data_path>/sequences
+        <root_of_dataset>/sequences
             <foo>: subdirectory with the name of the original video (without datatype suffix e.g. without .mp4)
                 <0>: number of sequence
                     0000.png: first picture in this sequence
@@ -47,7 +47,7 @@ def extract_from_directory(data_path, dataset, compression,
                     0000.png
                     0001.png
 
-    :param data_path: path of source videos
+    :param data_path: path of FaceForensics root directory
     :param dataset: of which dataset to choose from. See DATASET_PATHS
     :param compression: of which compression level to choose from. See COMPRESSION
     :param num_sequences: how many sequences to extract. default: 5
