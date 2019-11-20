@@ -13,7 +13,7 @@ Usage of new image extraction (with Face Cropping):
         
     Detailed description:
     
-    Extracts sequences from all videos in <data_path>/videos into <data_path>/sequences.
+    Extracts sequences from all videos in <data_path>/<dataset>/<compression>/videos into <data_path>/<dataset>/<compression>/sequences.
     Will use the FaceForensics file structure to identify all videos of dataset type specified.
     A sequence is a number of face-cropped images starting from a random frame number inside of the video with configurable number of
     frames to skip between two images.
