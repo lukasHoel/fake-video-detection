@@ -85,12 +85,13 @@ def extract_from_video(video_path, num_sequences, frames_per_sequence, skip_fram
             video_pos = first_frame_number + frame_nr*skip_frames # calculate next video frame position
             video.set(cv2.CAP_PROP_POS_FRAMES, video_pos) # set next video frame position
             ret, img = video.read() # read next image
-            found_crop, img = crop_face_from_image(img, size, padding) # crop image on face
 
-            if found_crop: # only then save the image ... else we have one less image
-                sequences[seq_nr][frame_nr] = img
-            else:
-                num_crop_fails += 1
+            if ret: # if image could be extracted from video - "should always work"
+                found_crop, img = crop_face_from_image(img, size, padding) # crop image on face
+                if found_crop: # only then save the image ... else we have one less image
+                    sequences[seq_nr][frame_nr] = img
+                else:
+                    num_crop_fails += 1
 
         print("Finished extracting sequence {} with {} unfound face-crops".format(seq_nr, num_crop_fails))
 
@@ -135,9 +136,12 @@ def crop_face_from_image(image, size, padding):
         #plt.show()
 
         faceimg = image[ny:ny + nr, nx:nx + nr]
-        cropped_image = cv2.resize(faceimg, (size, size))
-
-        return (True, cropped_image)
+        if isinstance(faceimg, np.ndarray) and len(faceimg) > 0 and len(faceimg[0]) > 0:
+            # check necessary because we this might be None/empty sometimes... why?
+            cropped_image = cv2.resize(faceimg, (size, size))
+            return (True, cropped_image)
+        else:
+            return (False, image)
 
 def save_sequences(sequences, path):
     os.makedirs(path, exist_ok=True) # create path ".../sequences/<video_name>"
