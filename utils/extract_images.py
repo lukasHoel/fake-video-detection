@@ -21,11 +21,12 @@ COMPRESSION = ['c0', 'c23', 'c40']
 
 def extract_from_directory(data_path, dataset, compression,
                            num_sequences=5, frames_per_sequence=10, skip_frames=5,
-                           size=128, padding=30):
+                           size=128, padding=30,
+                           sample_mode='uniform'):
     """
     Extracts sequences from all videos in <data_path>/<dataset>/<compression>/videos into <data_path>/<dataset>/<compression>/sequences.
     Will use the FaceForensics file structure to identify all videos of dataset type specified.
-    A sequence is a number of face-cropped images starting from a random frame number inside of the video with configurable number of
+    A sequence is a number of face-cropped images starting from a random/uniform frame number inside of the video with configurable number of
     frames to skip between two images.
     Videos will be saved in a subdirectory structure as follows:
     <root_of_dataset>
@@ -55,6 +56,9 @@ def extract_from_directory(data_path, dataset, compression,
     :param skip_frames: how many frames shall be skipped between two frames (to capture changes in expression) default: 5
     :param size: how big each frame shall be. Is considered to give both width and height, thus resulting image is quadratic. default: 128
     :param padding: how much padding shall be used around detected face crop in each direction (to capture all of the face) default: 30
+    :param sample_mode: whether samples shall be selected uniform or random. default: uniform.
+                        Uniform means deterministic selection of frame-numbers and random means random selection of frame-numbers
+                        for the first frame in a sequence.
 
     :return:
     """
@@ -64,20 +68,32 @@ def extract_from_directory(data_path, dataset, compression,
         sequence_folder = video.split('.')[0] # name like the video is called
         sequences = extract_from_video(join(videos_path, video),
                                        int(num_sequences), int(frames_per_sequence), int(skip_frames),
-                                       int(size), int(padding))
+                                       int(size), int(padding),
+                                       sample_mode)
         save_sequences(sequences, join(sequences_path, sequence_folder))
 
 
-def extract_from_video(video_path, num_sequences, frames_per_sequence, skip_frames, size, padding):
+def extract_from_video(video_path, num_sequences, frames_per_sequence, skip_frames, size, padding, sample_mode):
     print("Extract from video {}".format(video_path))
 
     video = cv2.VideoCapture(video_path)
     total_frames = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
+    required_frames_per_sequence = (frames_per_sequence - 1) * skip_frames
 
     sequences = [[None for x in range(frames_per_sequence)] for y in range(num_sequences)]
 
     for seq_nr in range(num_sequences):
-        first_frame_number = random.randrange(total_frames)
+        if sample_mode == 'uniform':
+            available_frames_per_sequence = total_frames / num_sequences # uniformly divide video into equally large frame blocks
+            if available_frames_per_sequence < required_frames_per_sequence:
+                # if there are not enough frames to not overlap between sequences, then we allow overlapping by that factor
+                first_frame_number = seq_nr * (required_frames_per_sequence/available_frames_per_sequence) * 2
+            else:
+                # if there are enough frames, we do not overlap between sequences and start each sequence at a new frame.
+                first_frame_number = seq_nr * available_frames_per_sequence
+        else:
+            first_frame_number = random.randrange(total_frames - required_frames_per_sequence)
+
         print("Extract sequence {} from frame {}".format(seq_nr, first_frame_number))
         num_crop_fails = 0
 
@@ -174,6 +190,9 @@ if __name__ == '__main__':
                    default='128')
     p.add_argument('--padding', type=str,
                    default='30')
+    p.add_argument('--sample_mode', type=str,
+                   choices=['uniform','random'],
+                   default='uniform')
     args = p.parse_args()
 
     if args.dataset == 'all':
