@@ -63,7 +63,7 @@ Usage of downsampling:
     ./downsample.sh <base-path> e.g. ./downsample.sh manipulated_sequences/Deepfakes/c40/images/
     
     base-path shall be the directory in which the different videos/images lie, e.g.
-        FaceForensics\manipulated_sequences\Deepfakes\c40\images
+        FaceForensics\manipulated_sequences\Deepfakes\c40\images\
             033_097
             123_456
             234_567
