@@ -15,7 +15,7 @@ Usage of new image extraction (with Face Cropping):
     
     Extracts sequences from all videos in <data_path>/<dataset>/<compression>/videos into <data_path>/<dataset>/<compression>/sequences.
     Will use the FaceForensics file structure to identify all videos of dataset type specified.
-    A sequence is a number of face-cropped images starting from a random frame number inside of the video with configurable number of
+    A sequence is a number of face-cropped images starting from a random/uniform frame number inside of the video with configurable number of
     frames to skip between two images.
     Videos will be saved in a subdirectory structure as follows:
     <root_of_dataset>
@@ -45,6 +45,9 @@ Usage of new image extraction (with Face Cropping):
     :param skip_frames: how many frames shall be skipped between two frames (to capture changes in expression) default: 5
     :param size: how big each frame shall be. Is considered to give both width and height, thus resulting image is quadratic. default: 128
     :param padding: how much padding shall be used around detected face crop in each direction (to capture all of the face) default: 30
+    :param sample_mode: whether samples shall be selected uniform or random. default: uniform.
+                        Uniform means deterministic selection of frame-numbers and random means random selection of frame-numbers
+                        for the first frame in a sequence.
 
 Usage of old image extraction (from FaceForensics Github):
     python extract_compressed_videos.py --data_path path/to/FaceForensics/ --dataset {FaceSwap, Deepfakes, Face2Face, original1, original2} --compression {c0, c23, c40}
