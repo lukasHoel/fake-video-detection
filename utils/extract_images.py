@@ -130,7 +130,7 @@ def crop_face_from_image(image, size, padding):
         image,
         scaleFactor=1.1,
         minNeighbors=5,
-        minSize=(size - 10, size - 10)
+        minSize=(80, 80)
     )
 
     if(len(faces) == 0):
