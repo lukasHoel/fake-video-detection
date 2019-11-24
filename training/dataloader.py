@@ -139,16 +139,16 @@ class ToTensor(object):
                 'labels'     : labels,
                 'original_id': vid_name}
 
-
-# test /example
-d = ["C:/Users/admin/Desktop/FaceForensics/manipulated_sequences/Face2Face/c40/sequences"]
-test_dataset = FaceForensicsVideosDataset(d, generate_coupled=True, transform=ToTensor())
-dataset_loader = torch.utils.data.DataLoader(test_dataset,
-                                             batch_size=4, shuffle=True,
-                                             num_workers=4)
-sample = test_dataset.__getitem__(24)
-print(test_dataset.__len__())
-print("Number of samples: ", len(sample["images"]))
-print("Original id: ", sample["original_id"])  # id of original video
-print("Labels: ", sample["labels"])
-print("Tensor shape of one sample in the list: ", sample["images"][0].shape)
+if __name__ == '__main__':
+    # test /example
+    d = ["C:/Users/admin/Desktop/FaceForensics/manipulated_sequences/Deepfakes/c40/sequences_128x128"]
+    test_dataset = FaceForensicsVideosDataset(d, generate_coupled=True, transform=ToTensor())
+    dataset_loader = torch.utils.data.DataLoader(test_dataset,
+                                                 batch_size=4, shuffle=True,
+                                                 num_workers=4)
+    sample = test_dataset.__getitem__(24)
+    print(test_dataset.__len__())
+    print("Number of samples: ", len(sample["images"]))
+    print("Original id: ", sample["original_id"])  # id of original video
+    print("Labels: ", sample["labels"])
+    print("Tensor shape of one sample in the list: ", sample["images"][0].shape)
