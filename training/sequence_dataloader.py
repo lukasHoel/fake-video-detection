@@ -6,7 +6,7 @@ import numpy as np
 
 
 class FaceForensicsVideosDataset(data.Dataset):
-    def __init__(self, directories, generate_coupled=False, transform=None):
+    def __init__(self, directories, sequence_length, generate_coupled=False, transform=None):
         """
         Args:
         directories: List of paths where the images for the dataset are
@@ -37,7 +37,7 @@ class FaceForensicsVideosDataset(data.Dataset):
                 for s in sequence_folders:
                     # Discard empty sample folders
                     n = len([x for x in os.listdir(s) if os.path.isfile(os.path.join(s, x)) and x.endswith(".png")])
-                    if n == 0:
+                    if n != sequence_length:
                         continue
 
                     # Generate dict_keys of form f(original)_index for all videos
@@ -116,8 +116,8 @@ class FaceForensicsVideosDataset(data.Dataset):
                 this_sample.append(io.imread(whole_path + "/" + name))
             image_matrix = np.stack(this_sample)
             samples.append(image_matrix)
-
-        sample = {'samples': samples, 'labels': label_list, 'original_id': original}
+        samples = np.stack(samples)
+        sample = {"sequences": samples, "labels": np.stack(label_list)}
 
         if self.transform:
             sample = self.transform(sample)
@@ -129,26 +129,32 @@ class ToTensor(object):
     """Convert ndarrays in sample to Tensors."""
 
     def __call__(self, sample):
-        samples, labels, vid_name = sample['samples'], sample['labels'], sample['original_id']
+        samples, labels = sample["sequences"], sample["labels"]
 
         # swap color axis because
         # numpy image: num_frames x H x W x C
         # torch image: num_frames x C X H X W
-        samples = [torch.from_numpy(images.transpose((0, 3, 1, 2))) for images in samples]
-        return {'images'    : samples,
-                'labels'     : labels,
-                'original_id': vid_name}
+        #print(samples.shape)
+        samples = torch.from_numpy(samples.transpose((0, 1, 4, 2, 3)))
+        return {"sequences"    : samples,
+                "labels"     : labels}
 
+
+def my_collate(batch):
+    data = np.concatenate([b["sequences"] for b in batch], axis=0)
+    targets = np.concatenate([b["labels"] for b in batch], axis=0)
+    sample = {"sequences": data, "labels": targets}
+    return sample
 
 # test /example
 d = ["../../../data/FaceForensics/d2/manipulated_sequences/Face2Face/c40/sequences"]
-test_dataset = FaceForensicsVideosDataset(d, generate_coupled=True, transform=ToTensor())
+test_dataset = FaceForensicsVideosDataset(d, generate_coupled=False, sequence_length=10, transform=ToTensor())
 dataset_loader = torch.utils.data.DataLoader(test_dataset,
                                              batch_size=4, shuffle=True,
-                                             num_workers=4)
-sample = test_dataset.__getitem__(24)
-print(test_dataset.__len__())
-print("Number of samples: ", len(sample["images"]))
-print("Original id: ", sample["original_id"])  # id of original video
-print("Labels: ", sample["labels"])
-print("Tensor shape of one sample in the list: ", sample["images"][0].shape)
+                                             collate_fn=my_collate,  # use custom collate function here
+                                             pin_memory=True)
+
+for i, sample in enumerate(dataset_loader):
+    print(sample["sequences"].shape)
+    print(sample["labels"].shape)
+
