@@ -141,7 +141,7 @@ class ToTensor(object):
 
 
 # test /example
-d = ["../../../data/FaceForensics/d2/manipulated_sequences/Face2Face/c40/sequences"]
+d = ["C:/Users/admin/Desktop/FaceForensics/manipulated_sequences/Face2Face/c40/sequences"]
 test_dataset = FaceForensicsVideosDataset(d, generate_coupled=True, transform=ToTensor())
 dataset_loader = torch.utils.data.DataLoader(test_dataset,
                                              batch_size=4, shuffle=True,
