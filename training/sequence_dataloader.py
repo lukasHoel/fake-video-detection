@@ -147,16 +147,15 @@ def my_collate(batch):
     sample = {"sequences": data, "labels": targets}
     return sample
 
-# test /example
-d = ["../../../data/FaceForensics/d2/manipulated_sequences/Face2Face/c40/sequences"]
-test_dataset = FaceForensicsVideosDataset(d, generate_coupled=False, sequence_length=10, transform=ToTensor())
-dataset_loader = torch.utils.data.DataLoader(test_dataset,
-                                             batch_size=4, shuffle=True,
-                                             collate_fn=my_collate,  # use custom collate function here
-                                             pin_memory=True)
+if __name__ == '__main__':
+    # test /example
+    d = ["C:\Users\admin\Desktop\FaceForensics\manipulated_sequences\Face2Face\c40\sequences"]
+    test_dataset = FaceForensicsVideosDataset(d, generate_coupled=False, sequence_length=10, transform=ToTensor())
+    dataset_loader = torch.utils.data.DataLoader(test_dataset,
+                                                 batch_size=4, shuffle=True,
+                                                 collate_fn=my_collate,  # use custom collate function here
+                                                 pin_memory=True)
 
-for i, sample in enumerate(dataset_loader):
-    print(sample["sequences"].shape)
-    print(sample["labels"].shape)
-
->>>>>>> master:training/sequence_dataloader.py
+    for i, sample in enumerate(dataset_loader):
+        print(sample["sequences"].shape)
+        print(sample["labels"].shape)

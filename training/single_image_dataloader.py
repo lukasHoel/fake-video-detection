@@ -84,13 +84,13 @@ class ToTensor(object):
         return {'image'     : image,
                 'label'     : label}
 
-
-# test /example
-d = ["../../../data/FaceForensics/d2/manipulated_sequences/Face2Face/c40/sequences"]
-test_dataset = FaceForensicsImagesDataset(d,transform=ToTensor())
-dataset_loader = torch.utils.data.DataLoader(test_dataset,
-                                             batch_size=4, shuffle=True,
-                                             num_workers=4)
-for i, sample in enumerate(dataset_loader):
-    print(sample["image"].shape)
-    print(sample["label"].shape)
+if __name__ == '__main__':
+    # test /example
+    d = ["C:\Users\admin\Desktop\FaceForensics\manipulated_sequences\Face2Face\c40\sequences"]
+    test_dataset = FaceForensicsImagesDataset(d,transform=ToTensor())
+    dataset_loader = torch.utils.data.DataLoader(test_dataset,
+                                                 batch_size=4, shuffle=True,
+                                                 num_workers=4)
+    for i, sample in enumerate(dataset_loader):
+        print(sample["image"].shape)
+        print(sample["label"].shape)
