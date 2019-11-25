@@ -149,7 +149,7 @@ def my_collate(batch):
 
 if __name__ == '__main__':
     # test /example
-    d = ["C:\Users\admin\Desktop\FaceForensics\manipulated_sequences\Face2Face\c40\sequences"]
+    d = ["C:/Users/admin/Desktop/FaceForensics/manipulated_sequences/Face2Face/c40/sequences"]
     test_dataset = FaceForensicsVideosDataset(d, generate_coupled=False, sequence_length=10, transform=ToTensor())
     dataset_loader = torch.utils.data.DataLoader(test_dataset,
                                                  batch_size=4, shuffle=True,
