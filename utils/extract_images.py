@@ -63,7 +63,8 @@ def extract_from_directory(data_path, dataset, compression,
     :return:
     """
     videos_path = join(data_path, DATASET_PATHS[dataset], compression, 'videos')
-    sequences_path = join(data_path, DATASET_PATHS[dataset], compression, 'sequences')
+    sequence_suffix = '_' + str(size) + 'x' + str(size) + '_skip_' + str(skip_frames) + '_' + sample_mode
+    sequences_path = join(data_path, DATASET_PATHS[dataset], compression, 'sequences' + sequence_suffix)
     for video in tqdm(os.listdir(videos_path)):
         sequence_folder = video.split('.')[0] # name like the video is called
         sequences = extract_from_video(join(videos_path, video),
