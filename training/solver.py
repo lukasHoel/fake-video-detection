@@ -4,9 +4,9 @@ import numpy as np
 import torch
 from torch.autograd import Variable
 
-def wrap_data(xb, yb, cuda=False):
+def wrap_data(xb, yb, device):
     xb, yb = Variable(xb), Variable(yb)
-    if cuda:
+    if str(device) != 'cpu':
         xb, yb = xb.cuda(), yb.cuda()
 
     return xb, yb
@@ -76,8 +76,11 @@ class Solver(object):
         ########################################################################
         for epoch in range(num_epochs):  # for every epoch...
             model.train()  # TRAINING mode (for dropout, batchnorm, etc.)
-            for i, (xb, yb) in enumerate(train_loader):  # for every minibatch in training set
-                xb, yb = wrap_data(xb, yb, model.is_cuda)
+            for i, sample in enumerate(train_loader):  # for every minibatch in training set
+                xb = sample["image"].float()
+                yb = sample["label"].long()
+
+                xb, yb = wrap_data(xb, yb, device)
 
                 # FORWARD PASS --> Loss calculation
                 scores = model(xb)

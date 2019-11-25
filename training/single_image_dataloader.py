@@ -92,5 +92,7 @@ if __name__ == '__main__':
                                                  batch_size=4, shuffle=True,
                                                  num_workers=4)
     for i, sample in enumerate(dataset_loader):
-        print(sample["image"].shape)
-        print(sample["label"].shape)
+        if i == 0:
+            print(sample["label"])
+            print(sample["image"].shape)
+            #print(sample["label"].shape)
