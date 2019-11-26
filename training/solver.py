@@ -74,24 +74,36 @@ class Solver(object):
         #   [Epoch 1/5] VAL   acc/loss: 0.539/1.310                            #
         #   ...                                                                #
         ########################################################################
+
+        #import time
+
         for epoch in range(num_epochs):  # for every epoch...
             model.train()  # TRAINING mode (for dropout, batchnorm, etc.)
             for i, sample in enumerate(train_loader):  # for every minibatch in training set
+                # DATA conversion (for cuda and cpu support)
+                #start = time.time()
                 xb = sample["image"].float()
                 yb = sample["label"].long()
-
                 xb, yb = wrap_data(xb, yb, device)
+                #end = time.time()
+                #print("Converting input took {} seconds".format(end - start))
 
                 # FORWARD PASS --> Loss calculation
+                #start = time.time()
                 scores = model(xb)
                 loss = self.loss_func(scores, yb)
+                #end = time.time()
+                #print("Forward pass took {} seconds".format(end - start))
+
                 # BACKWARD PASS --> Gradient-Descent update
+                #start = time.time()
                 loss.backward()
                 optim.step()
                 optim.zero_grad()
-
                 loss = loss.data.cpu().numpy()
                 self.train_loss_history.append(loss)
+                #end = time.time()
+                #print("Backward pass and loss calculation took {} seconds".format(end - start))
 
                 # Print loss every log_nth iteration
                 if (i % log_nth == 0):
