@@ -53,7 +53,7 @@ class Solver(object):
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         model.to(device)
 
-        print('START TRAIN.')
+        print('START TRAIN on device: {}'.format(device))
         ########################################################################
         # TODO:                                                                #
         # Write your own personal training method for our solver. In each      #
@@ -122,7 +122,7 @@ class Solver(object):
                 losses = []
                 val_acc = []
                 for xb, yb in val_loader:
-                    xb, yb = wrap_data(xb, yb, model.is_cuda)
+                    xb, yb = wrap_data(xb, yb, device)
 
                     # FORWARD PASS --> Loss calculation
                     scores = model(xb)
