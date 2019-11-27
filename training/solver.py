@@ -121,7 +121,9 @@ class Solver(object):
             with torch.no_grad():
                 losses = []
                 val_acc = []
-                for xb, yb in val_loader:
+                for sample in val_loader:
+                    xb = sample["image"].float()
+                    yb = sample["label"].long()
                     xb, yb = wrap_data(xb, yb, device)
 
                     # FORWARD PASS --> Loss calculation
