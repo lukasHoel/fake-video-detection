@@ -3,6 +3,7 @@ from torch.utils import data
 import torch
 import os
 import numpy as np
+import math
 
 
 class FaceForensicsVideosDataset(data.Dataset):
@@ -18,6 +19,7 @@ class FaceForensicsVideosDataset(data.Dataset):
         self.generate_coupled = generate_coupled
         mapping_dict = {}
         self.dataset_length = 0
+        self.num_videos = 0
 
         self.frame_dir = {}
         counter = 0
@@ -25,6 +27,7 @@ class FaceForensicsVideosDataset(data.Dataset):
             # Get all folders with videos in the directory at path
             video_folders = [f for f in os.listdir(path) if not os.path.isfile(os.path.join(path, f))]
             for f in video_folders:
+                self.num_videos += 1
                 # process video name to know how it was generated
                 name_split = f.split("_")
                 if len(name_split) == 1:
@@ -33,11 +36,13 @@ class FaceForensicsVideosDataset(data.Dataset):
                 original = name_split[1]
 
                 # Iterate through all sequences
-                sequence_folders = [os.path.join(path, f, x) for x in  os.listdir(os.path.join(path, f)) if not os.path.isfile(os.path.join(path, f, x))]
+                sequence_folders = [os.path.join(path, f, x) for x in os.listdir(os.path.join(path, f)) if
+                                    not os.path.isfile(os.path.join(path, f, x))]
                 for s in sequence_folders:
                     # Discard empty sample folders
                     n = len([x for x in os.listdir(s) if os.path.isfile(os.path.join(s, x)) and x.endswith(".png")])
-                    if n != sequence_length:
+                    if n < sequence_length:
+                        # print(sequence_length, n)
                         continue
 
                     # Generate dict_keys of form f(original)_index for all videos
@@ -69,6 +74,38 @@ class FaceForensicsVideosDataset(data.Dataset):
     def __len__(self):
         return self.dataset_length
 
+    def get_num_videos(self):
+        return self.num_videos
+
+    # input: part of cases which should be train and validation set, e.g. 0.8, 0.2
+    # returns two lists of indices, one for training and one for test cases
+    def get_train_val_lists(self, part_train, part_val):
+        label_list = [[0, 0]]
+        last_label = (self.frame_dir[0][1] == -1)
+
+        for key in self.frame_dir:
+            if (self.frame_dir[key][1] == -1) == last_label:
+                label_list[-1][1] += 1
+            else:
+                label_list.append([key, 0])
+                last_label = not last_label
+
+        val_list = []
+        train_list = []
+        for streak in label_list:
+            start = streak[0]
+            length = streak[1]
+
+            midpoint = int(start + length * part_train)
+            endpoint = math.ceil(midpoint + length * part_val)
+
+            train_part = list(range(start, midpoint))
+            val_part = list(range(midpoint, endpoint))
+            train_list += train_part
+            val_list += val_part
+
+        return train_list, val_list
+
     def __getitem__(self, idx):
         """
         Gets items with the id idx or idx_* from self.frame_dir, loads and returns them.
@@ -92,7 +129,7 @@ class FaceForensicsVideosDataset(data.Dataset):
         # Not generate_coupled: Just take the one sample (frames from one video) with key idx
         if self.generate_coupled == False:
             sample_list.append(self.frame_dir[idx])
-            
+
         # If generate_coupled: Take all samples starting with idx_
         else:
             i = 0
@@ -105,11 +142,12 @@ class FaceForensicsVideosDataset(data.Dataset):
         for sample in sample_list:
             this_sample = []
             whole_path, actor, original, n = sample
-            label_list.append(actor == -1)      # Append label 1 if actor==-1 (so if video not fake)
+            label_list.append(actor == -1)  # Append label 1 if actor==-1 (so if video not fake)
 
-            #get all images at whole_path/
+            # get all images at whole_path/
             image_names = [f for f in os.listdir(whole_path) if
-                     os.path.isfile(os.path.join(whole_path, f)) and f.endswith(".png")]
+                           os.path.isfile(os.path.join(whole_path, f)) and f.endswith(".png")]
+            image_names = image_names[0:5]
 
             # Read all images into an image list and stack to 1 numpy matrix
             for name in image_names:
@@ -134,28 +172,34 @@ class ToTensor(object):
         # swap color axis because
         # numpy image: num_frames x H x W x C
         # torch image: num_frames x C X H X W
-        #print(samples.shape)
         samples = torch.from_numpy(samples.transpose((0, 1, 4, 2, 3)))
-        return {"sequences"    : samples,
-                "labels"     : labels}
-
+        labels = torch.tensor(labels[0])
+        return {"sequences": samples,
+                "labels"   : labels}
 
 
 def my_collate(batch):
     data = np.concatenate([b["sequences"] for b in batch], axis=0)
-    targets = np.concatenate([b["labels"] for b in batch], axis=0)
+    targets = [b["labels"] for b in batch]
     sample = {"sequences": data, "labels": targets}
     return sample
 
+
 if __name__ == '__main__':
     # test /example
-    d = ["C:/Users/admin/Desktop/FaceForensics/manipulated_sequences/Face2Face/c40/sequences"]
+    d = [
+            "/home/anna/Desktop/Uni/WiSe19/DL4CV/data/FaceForensics/set1/manipulated_sequences/Deepfakes/c40/sequences_128x128_skip_5_uniform",
+            "/home/anna/Desktop/Uni/WiSe19/DL4CV/data/FaceForensics/set1/original_sequences/youtube/c40/sequences_128x128_skip_5_uniform"]
     test_dataset = FaceForensicsVideosDataset(d, generate_coupled=False, sequence_length=10, transform=ToTensor())
+    print(test_dataset.__len__())
+    train_list, val_list = test_dataset.get_train_val_lists(0.9, 0.01)
+    print(len(train_list), len(val_list))
     dataset_loader = torch.utils.data.DataLoader(test_dataset,
                                                  batch_size=4, shuffle=True,
                                                  collate_fn=my_collate,  # use custom collate function here
                                                  pin_memory=True)
 
     for i, sample in enumerate(dataset_loader):
-        print(sample["sequences"].shape)
-        print(sample["labels"].shape)
+        # print("->", sample["sequences"].shape)
+        # print(sample["labels"])
+        pass
