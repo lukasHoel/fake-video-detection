@@ -174,8 +174,8 @@ class ToTensor(object):
         # torch image: num_frames x C X H X W
         samples = torch.from_numpy(samples.transpose((0, 1, 4, 2, 3)))
         labels = torch.tensor(labels[0])
-        return {"sequences": samples.float(),
-                "labels"   : torch.tensor(labels).long()}
+        return {"image": samples.float(),
+                "label"   : torch.tensor(labels).long()}
 
 
 def my_collate(batch):
