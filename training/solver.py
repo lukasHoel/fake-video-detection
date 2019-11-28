@@ -82,8 +82,8 @@ class Solver(object):
             for i, sample in enumerate(train_loader):  # for every minibatch in training set
                 # DATA conversion (for cuda and cpu support)
                 #start = time.time()
-                xb = sample["image"].float()
-                yb = sample["label"].long()
+                xb = sample["image"]
+                yb = sample["label"]
                 xb, yb = wrap_data(xb, yb, device)
                 #end = time.time()
                 #print("Converting input took {} seconds".format(end - start))
