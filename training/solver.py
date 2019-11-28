@@ -122,8 +122,8 @@ class Solver(object):
                 losses = []
                 val_acc = []
                 for sample in val_loader:
-                    xb = sample["image"].float()
-                    yb = sample["label"].long()
+                    xb = sample["image"]
+                    yb = sample["label"]
                     xb, yb = wrap_data(xb, yb, device)
 
                     # FORWARD PASS --> Loss calculation
