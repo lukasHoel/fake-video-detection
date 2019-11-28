@@ -86,7 +86,7 @@ class ToTensor(object):
 
 if __name__ == '__main__':
     # test /example
-    d = ["C:/Users/admin/Desktop/FaceForensics/manipulated_sequences/Face2Face/c40/sequences_128x128_skip_5_uniform"]
+    d = ["C:/Users/admin/Desktop/FaceForensics/manipulated_sequences/Face2Face/c40/sequences"]
     test_dataset = FaceForensicsImagesDataset(d,transform=ToTensor())
     dataset_loader = torch.utils.data.DataLoader(test_dataset,
                                                  batch_size=4, shuffle=True,
