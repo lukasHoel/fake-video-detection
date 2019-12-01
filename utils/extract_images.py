@@ -15,14 +15,16 @@ DATASET_PATHS = {
 	'original2': 'original_sequences/youtube',
     'Deepfakes': 'manipulated_sequences/Deepfakes',
     'Face2Face': 'manipulated_sequences/Face2Face',
-    'FaceSwap': 'manipulated_sequences/FaceSwap'
+    'FaceSwap': 'manipulated_sequences/FaceSwap',
+    'NeuralTextures': 'manipulated_sequences/NeuralTextures'
 }
 COMPRESSION = ['c0', 'c23', 'c40']
 
 def extract_from_directory(data_path, dataset, compression,
                            num_sequences=5, frames_per_sequence=10, skip_frames=5,
                            size=128, padding=30,
-                           sample_mode='uniform'):
+                           sample_mode='uniform',
+                           num_videos='all'):
     """
     Extracts sequences from all videos in <data_path>/<dataset>/<compression>/videos into <data_path>/<dataset>/<compression>/sequences.
     Will use the FaceForensics file structure to identify all videos of dataset type specified.
@@ -55,26 +57,37 @@ def extract_from_directory(data_path, dataset, compression,
     :param frames_per_sequence: how many frames each sequence shall contain. default: 10
     :param skip_frames: how many frames shall be skipped between two frames (to capture changes in expression) default: 5
     :param size: how big each frame shall be. Is considered to give both width and height, thus resulting image is quadratic. default: 128
-    :param padding: how much padding shall be used around detected face crop in each direction (to capture all of the face) default: 30
+    :param padding: how much padding shall be used around detected face crop in each direction (to capture all of the face). Will only be used by the haarcascades classifier default: 30
     :param sample_mode: whether samples shall be selected uniform or random. default: uniform.
                         Uniform means deterministic selection of frame-numbers and random means random selection of frame-numbers
                         for the first frame in a sequence.
+    :param num_videos: How many videos to extract into sequences of images. Default: all
 
     :return:
     """
+    # Prepare folder names and paths
     videos_path = join(data_path, DATASET_PATHS[dataset], compression, 'videos')
-    sequence_suffix = '_' + str(size) + 'x' + str(size) + '_skip_' + str(skip_frames) + '_' + sample_mode
+    sequence_suffix = '_' + str(size) + 'x' + str(size) + '_' + str(num_sequences) + 'seq@' + str(frames_per_sequence) + 'frames_skip_' + str(skip_frames) + '_' + sample_mode
     sequences_path = join(data_path, DATASET_PATHS[dataset], compression, 'sequences' + sequence_suffix)
-    for video in tqdm(os.listdir(videos_path)):
-        sequence_folder = video.split('.')[0] # name like the video is called
+
+    # Only iterate over num_videos
+    videos = os.listdir(videos_path)
+    if num_videos != 'all':
+        videos = videos[:int(num_videos)]
+
+    # Extract sequences for every video
+    for video in tqdm(videos):
+        video_name = video.split('.')[0] # e.g. 000_003
+        mask_path = join(data_path, DATASET_PATHS[dataset], 'masks', 'videos', video) # path to the mask for this video
         sequences = extract_from_video(join(videos_path, video),
                                        int(num_sequences), int(frames_per_sequence), int(skip_frames),
                                        int(size), int(padding),
-                                       sample_mode)
-        save_sequences(sequences, join(sequences_path, sequence_folder))
+                                       sample_mode,
+                                       mask_path)
+        save_sequences(sequences, join(sequences_path, video_name))
 
 
-def extract_from_video(video_path, num_sequences, frames_per_sequence, skip_frames, size, padding, sample_mode):
+def extract_from_video(video_path, num_sequences, frames_per_sequence, skip_frames, size, padding, sample_mode, mask_path):
     print("Extract from video {}".format(video_path))
 
     video = cv2.VideoCapture(video_path)
@@ -95,27 +108,113 @@ def extract_from_video(video_path, num_sequences, frames_per_sequence, skip_fram
         else:
             first_frame_number = random.randrange(total_frames - required_frames_per_sequence)
 
+        first_frame_number = int(first_frame_number)
         print("Extract sequence {} from frame {}".format(seq_nr, first_frame_number))
         num_crop_fails = 0
+        num_mask_crop_fails = 0
 
         for frame_nr in range(frames_per_sequence):
-            video_pos = first_frame_number + frame_nr*skip_frames # calculate next video frame position
+            video_pos = int(first_frame_number + frame_nr*skip_frames) # calculate next video frame position
             video.set(cv2.CAP_PROP_POS_FRAMES, video_pos) # set next video frame position
             ret, img = video.read() # read next image
 
             if ret: # if image could be extracted from video - "should always work"
-                found_crop, img = crop_face_from_image(img, size, padding) # crop image on face
-                if found_crop: # only then save the image ... else we have one less image
-                    sequences[seq_nr][frame_nr] = img
+                found_crop, cropped_img = crop_face_from_mask(img, size, mask_path, video_pos)
+                if found_crop: # only then save the image ... else try cropping with haarcascade classifier
+                    sequences[seq_nr][frame_nr] = cropped_img
                 else:
-                    num_crop_fails += 1
+                    num_mask_crop_fails += 1
+                    found_crop, cropped_img = crop_face_from_image(img, size, padding) # crop image on face
+                    if found_crop: # only then save the image ... else we have one less image
+                        sequences[seq_nr][frame_nr] = cropped_img
+                    else:
+                        num_crop_fails += 1
 
-        print("Finished extracting sequence {} with {} unfound face-crops".format(seq_nr, num_crop_fails))
+        print("Finished extracting sequence {} with {} unfound face-crops and {} mask_crop_fails".format(seq_nr, num_crop_fails, num_mask_crop_fails))
 
     video.release()
     print("Finished extracting from video {}".format(video_path))
 
     return sequences
+
+def crop_face_from_mask(face_img, size, mask_path, frame_number):
+    if mask_path == None:
+        return (False, None)
+
+    # load mask video and extract image from required frame_number
+    mask_video = cv2.VideoCapture(mask_path)
+    mask_video.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
+    ret, mask_img = mask_video.read()  # read next image
+    mask_video.release()
+    if not ret:
+        return (False, None)
+
+    # extract the location of the mask from the mask image (via opencv contours function)
+    img_gray = cv2.cvtColor(mask_img, cv2.COLOR_BGR2GRAY)
+    ret, thresh = cv2.threshold(img_gray, 70, 255, 0)
+    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    c = max(contours, key=cv2.contourArea) # find the biggest area and use as face crop
+    x, y, w, h = cv2.boundingRect(c)
+
+    # visualize the location of the mask in the mask image
+    #img = np.copy(mask_img)
+    #cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+    #cv2.imshow("Extraction of mask from mask_img", img)
+    #cv2.waitKey(0)
+    #cv2.destroyAllWindows()
+
+    # calculate where to crop in face_img which could be of different resolution than mask_img
+    mask_h, mask_w, _ = mask_img.shape
+    face_h, face_w, _ = face_img.shape
+    scale_w = 1.0 * face_w / mask_w
+    scale_h = 1.0 * face_h / mask_h
+    x = int(x * scale_w)
+    w = int(w * scale_w)
+    y = int(y * scale_h)
+    h = int(h * scale_h)
+
+    # visualize the location of the mask in the face image
+    #img = np.copy(face_img)
+    #cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+    #cv2.imshow("Extraction of mask from face_img", img)
+    #cv2.waitKey(0)
+    #cv2.destroyAllWindows()
+
+    # crop and resize the face_img
+    # this creates a square image by taking the largest of w/h as length of the square-crop
+    nx, ny, nr = calc_square_bounding_box(x, y, w, h, 0) # always zero padding because mask is precise
+    res = crop_and_resize_image(face_img, size, nx, ny, nr, nr)
+
+    # this creates a square image by resizing (linear interpolation!) the image to the square resolution
+    # this might be unpreferred because it might blur the artifacts in fake images due to interpolation
+    #res = crop_and_resize_image(face_img, size, x, y, w, h)
+
+    # visualize the result crop
+    #cv2.imshow("Extraction of mask from face_img after crop and resize", res[1])
+    #cv2.waitKey(0)
+    #cv2.destroyAllWindows()
+
+    return res
+
+def crop_and_resize_image(image, size, x, y, w, h):
+    crop = image[y:y+h, x:x+w]
+    if isinstance(crop, np.ndarray) and len(crop) > 0 and len(crop[0]) > 0:
+        # check necessary because we this might be None/empty sometimes... why?
+        crop_resize = cv2.resize(crop, (size, size))
+        return (True, crop_resize)
+    else:
+        return (False, None)
+
+def calc_square_bounding_box(x, y, w, h, padding):
+    r = max(w, h) / 2  # get radius so that we can extract a square image
+    centerx = x + w / 2
+    centery = y + h / 2
+    nx = int(centerx - r - (padding / 2))
+    ny = int(centery - r - (padding / 2))
+    nr = int(r * 2 + padding)
+
+    return (nx, ny, nr)
+
 
 def crop_face_from_image(image, size, padding):
     """
@@ -139,12 +238,7 @@ def crop_face_from_image(image, size, padding):
     else:
         (x, y, w, h) = faces[0]
 
-        r = max(w, h) / 2 # get radius so that we can extract a square image
-        centerx = x + w / 2
-        centery = y + h / 2
-        nx = int(centerx - r - padding/2)
-        ny = int(centery - r - padding/2)
-        nr = int(r * 2 + padding)
+        nx, ny, nr = calc_square_bounding_box(x, y, w, h, padding)
 
         # Use this to show the detected face (green: detected + padding --> this is what will be extracted), (blue: original detected)
         #cv2.rectangle(image, (nx, ny), (nx + nr, ny + nr), (0, 255, 0), 2)
@@ -152,13 +246,7 @@ def crop_face_from_image(image, size, padding):
         #plt.imshow(image)
         #plt.show()
 
-        faceimg = image[ny:ny + nr, nx:nx + nr]
-        if isinstance(faceimg, np.ndarray) and len(faceimg) > 0 and len(faceimg[0]) > 0:
-            # check necessary because we this might be None/empty sometimes... why?
-            cropped_image = cv2.resize(faceimg, (size, size))
-            return (True, cropped_image)
-        else:
-            return (False, image)
+        return crop_and_resize_image(image, size, nx, ny, nr, nr)
 
 def save_sequences(sequences, path):
     os.makedirs(path, exist_ok=True) # create path ".../sequences/<video_name>"
@@ -194,6 +282,8 @@ if __name__ == '__main__':
     p.add_argument('--sample_mode', type=str,
                    choices=['uniform','random'],
                    default='uniform')
+    p.add_argument('--num_videos', type=str,
+                   default='all')
     args = p.parse_args()
 
     if args.dataset == 'all':
