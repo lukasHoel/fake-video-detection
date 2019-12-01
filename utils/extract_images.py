@@ -23,7 +23,8 @@ COMPRESSION = ['c0', 'c23', 'c40']
 def extract_from_directory(data_path, dataset, compression,
                            num_sequences=5, frames_per_sequence=10, skip_frames=5,
                            size=128, padding=30,
-                           sample_mode='uniform'):
+                           sample_mode='uniform',
+                           num_videos='all'):
     """
     Extracts sequences from all videos in <data_path>/<dataset>/<compression>/videos into <data_path>/<dataset>/<compression>/sequences.
     Will use the FaceForensics file structure to identify all videos of dataset type specified.
@@ -60,15 +61,24 @@ def extract_from_directory(data_path, dataset, compression,
     :param sample_mode: whether samples shall be selected uniform or random. default: uniform.
                         Uniform means deterministic selection of frame-numbers and random means random selection of frame-numbers
                         for the first frame in a sequence.
+    :param num_videos: How many videos to extract into sequences of images. Default: all
 
     :return:
     """
+    # Prepare folder names and paths
     videos_path = join(data_path, DATASET_PATHS[dataset], compression, 'videos')
     sequence_suffix = '_' + str(size) + 'x' + str(size) + '_' + str(num_sequences) + 'seq@' + str(frames_per_sequence) + 'frames_skip_' + str(skip_frames) + '_' + sample_mode
     sequences_path = join(data_path, DATASET_PATHS[dataset], compression, 'sequences' + sequence_suffix)
-    for video in tqdm(os.listdir(videos_path)):
-        video_name = video.split('.')[0]
-        mask_path = join(data_path, DATASET_PATHS[dataset], 'masks', 'videos', video)
+
+    # Only iterate over num_videos
+    videos = os.listdir(videos_path)
+    if num_videos != 'all':
+        videos = videos[:int(num_videos)]
+
+    # Extract sequences for every video
+    for video in tqdm(videos):
+        video_name = video.split('.')[0] # e.g. 000_003
+        mask_path = join(data_path, DATASET_PATHS[dataset], 'masks', 'videos', video) # path to the mask for this video
         sequences = extract_from_video(join(videos_path, video),
                                        int(num_sequences), int(frames_per_sequence), int(skip_frames),
                                        int(size), int(padding),
@@ -272,6 +282,8 @@ if __name__ == '__main__':
     p.add_argument('--sample_mode', type=str,
                    choices=['uniform','random'],
                    default='uniform')
+    p.add_argument('--num_videos', type=str,
+                   default='all')
     args = p.parse_args()
 
     if args.dataset == 'all':
