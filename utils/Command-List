@@ -1,3 +1,28 @@
+Usage of testset extraction:
+
+	python create_testset.py -i C:\Users\admin\Desktop\FaceForensics
+							 -o C:\Users\admin\Desktop\
+							 -s sequences_299x299_skip_5_uniform
+							 -m uniform
+							 -c c40
+							 -d all
+							 -p 10
+
+	Detailed description:
+	
+    Recursively moves a uniform/random sampled subset of directories in 'input/dataset/compression/sequence' to
+    'output/FaceForensics_Testset/dataset/compression/sequence'. The number of directories to be moved can be controlled
+    by the percentage parameter.
+
+    :param input (-i): root directory of the FaceForensics folder.
+    :param output (-o): root directory where the output folder "FaceForensics_Testset" shall be created
+    :param sequence (-s): from which sequence to extract into the testset (e.g. from sequences_299x299_skip_5_uniform)
+    :param dataset (-d): from which dataset to extract into the testset (e.g. from Deepfakes, all, ...)
+    :param compression (-c): from which compression level to extract into the testset (e.g. from c40)
+    :param percentage (-p): how many sequences to extract into the testset (e.g. 10%)
+    :param sample_mode (-m): how to extract (e.g. uniform: every i-th, random)
+							 
+							 
 Usage of new image extraction (with Face Cropping):
 
     requires installation of opencv (>3.x) and opencv-utils, e.g. pip install opencv-python, pip install opencv-utils
