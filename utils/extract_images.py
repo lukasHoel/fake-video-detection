@@ -15,7 +15,8 @@ DATASET_PATHS = {
 	'original2': 'original_sequences/youtube',
     'Deepfakes': 'manipulated_sequences/Deepfakes',
     'Face2Face': 'manipulated_sequences/Face2Face',
-    'FaceSwap': 'manipulated_sequences/FaceSwap'
+    'FaceSwap': 'manipulated_sequences/FaceSwap',
+    #'NeuralTextures': 'manipulated_sequences/NeuralTextures'
 }
 COMPRESSION = ['c0', 'c23', 'c40']
 
