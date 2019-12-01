@@ -10,9 +10,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
-DATASETS = ['FaceSwap', 'Deepfakes', 'Face2Face', 'NeuralTextures']
-
 if __name__ == '__main__':
+    DATASETS = ['FaceSwap', 'Deepfakes', 'Face2Face', 'NeuralTextures']
+
     for dataset in DATASETS:
         video = cv2.VideoCapture("C:\\Users\\admin\\Desktop\\FaceForensics\\manipulated_sequences\\" + dataset + "\\masks\\videos\\033_097.mp4")
         total_frames = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
