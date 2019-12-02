@@ -3,6 +3,7 @@ from torch.utils import data
 import torch
 import os
 import numpy as np
+import math
 
 
 class FaceForensicsImagesDataset(data.Dataset):
@@ -41,6 +42,36 @@ class FaceForensicsImagesDataset(data.Dataset):
                         counter += 1
                         self.frame_dir[key] = (i, actor, original)
         self.dataset_length = counter
+
+        # input: part of cases which should be train and validation set, e.g. 0.8, 0.2
+        # returns two lists of indices, one for training and one for test cases
+
+    def get_train_val_lists(self, part_train, part_val):
+        label_list = [[0, 0]]
+        last_label = (self.frame_dir[0][1] == -1)
+
+        for key in self.frame_dir:
+            if (self.frame_dir[key][1] == -1) == last_label:
+                label_list[-1][1] += 1
+            else:
+                label_list.append([key, 0])
+                last_label = not last_label
+
+        val_list = []
+        train_list = []
+        for streak in label_list:
+            start = streak[0]
+            length = streak[1]
+
+            midpoint = int(start + length * part_train)
+            endpoint = math.ceil(midpoint + length * part_val)
+
+            train_part = list(range(start, midpoint))
+            val_part = list(range(midpoint, endpoint))
+            train_list += train_part
+            val_list += val_part
+
+        return train_list, val_list
 
     # number of samples in the dataset
     def __len__(self):
@@ -88,6 +119,9 @@ if __name__ == '__main__':
     # test /example
     d = ["C:/Users/admin/Desktop/FaceForensics/manipulated_sequences/Face2Face/c40/sequences"]
     test_dataset = FaceForensicsImagesDataset(d,transform=ToTensor())
+    print(test_dataset.__len__())
+    train_list, val_list = test_dataset.get_train_val_lists(0.9, 0.01)
+    print(len(train_list), len(val_list))
     dataset_loader = torch.utils.data.DataLoader(test_dataset,
                                                  batch_size=4, shuffle=True,
                                                  num_workers=4)
