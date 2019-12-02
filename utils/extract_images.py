@@ -153,6 +153,9 @@ def crop_face_from_mask(face_img, size, mask_path, frame_number):
     img_gray = cv2.cvtColor(mask_img, cv2.COLOR_BGR2GRAY)
     ret, thresh = cv2.threshold(img_gray, 70, 255, 0)
     contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    if contours == None or len(contours) == 0:
+        return (False, None)
+
     c = max(contours, key=cv2.contourArea) # find the biggest area and use as face crop
     x, y, w, h = cv2.boundingRect(c)
 
