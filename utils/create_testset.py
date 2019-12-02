@@ -13,7 +13,7 @@ DATASET_PATHS = {
     'Deepfakes': 'manipulated_sequences/Deepfakes',
     'Face2Face': 'manipulated_sequences/Face2Face',
     'FaceSwap': 'manipulated_sequences/FaceSwap',
-    #'NeuralTextures': 'manipulated_sequences/NeuralTextures'
+    'NeuralTextures': 'manipulated_sequences/NeuralTextures'
 }
 
 def extract_testset_from_directory(input, output, sequence, dataset, compression, percentage, sample_mode):
@@ -39,6 +39,9 @@ def extract_testset_from_directory(input, output, sequence, dataset, compression
     testset_sequences = []
     #print("Number of directories in {}: {}".format(sequence_path, number_subdirs))
     #print("Testset length: {}".format(testset_length))
+
+    if number_subdirs < 1:
+        return
 
     if sample_mode == 'uniform':
         skip_rate = int(number_subdirs / testset_length)
