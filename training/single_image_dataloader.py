@@ -117,7 +117,9 @@ class ToTensor(object):
 
 if __name__ == '__main__':
     # test /example
-    d = ["C:/Users/admin/Desktop/FaceForensics/manipulated_sequences/Face2Face/c40/sequences"]
+    d = [
+            "/home/anna/Desktop/Uni/WiSe19/DL4CV/data/FaceForensics/set1/manipulated_sequences/Deepfakes/c40/sequences_128x128_skip_5_uniform",
+            "/home/anna/Desktop/Uni/WiSe19/DL4CV/data/FaceForensics/set1/original_sequences/youtube/c40/sequences_128x128_skip_5_uniform"]
     test_dataset = FaceForensicsImagesDataset(d,transform=ToTensor())
     print(test_dataset.__len__())
     train_list, val_list = test_dataset.get_train_val_lists(0.9, 0.01)
