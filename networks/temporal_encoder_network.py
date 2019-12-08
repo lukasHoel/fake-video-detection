@@ -13,6 +13,7 @@ class TemporalEncoder(nn.Module):
         super(TemporalEncoder, self).__init__()
         self.model_choice = model_choice
         self.dropout = dropout
+        self.num_input_images = num_input_images
         self.feature_extractor = self.create_feature_extractor(self.model_choice)
 
         # todo make channels_per_input configurable from last layer in feature_extractor
@@ -22,7 +23,7 @@ class TemporalEncoder(nn.Module):
         if model_choice == 'xception':
             feature_extractor = xception()
             # Remove fc
-            removed = list(self.feature_extractor.children())[:-1]
+            removed = list(feature_extractor.children())[:-1]
             feature_extractor = nn.Sequential(*removed)
 
         elif model_choice == 'resnet50' or model_choice == 'resnet18':
@@ -32,7 +33,7 @@ class TemporalEncoder(nn.Module):
                 feature_extractor = torchvision.models.resnet18(pretrained=True)
 
             # Remove fc
-            removed = list(self.feature_extractor.children())[:-1]
+            removed = list(feature_extractor.children())[:-1]
             feature_extractor = nn.Sequential(*removed)
         else:
             raise Exception('Choose valid model, e.g. resnet50')
@@ -65,8 +66,24 @@ class TemporalEncoder(nn.Module):
 
     def forward(self, x):
 
+        print(x.shape)
+
         # x is sequence of length n as input (how to get single image from sequence?)
+        for i in range(self.num_input_images):
+            x_i = x[:, :, i, :, :, :]
+            x_i = x_i.squeeze(dim=1)
+            y_i = self.feature_extractor(x_i)
+
+            print(y_i.shape)
+
+            #y_i = y_i.flatten(start_dim=1)
+            #y.append(y_i)
+
+            images = ...
+            targets = ...
+
         # 1. for every image in sequence: calculate features with self.feature_extractor
+                # todo do I need to loop or does it work vectorized?
                 # save the features in an array
         # 2. concatenate multiple features together and run a CNN block on it (self.temporal_encoder)
                 # we now have multiple outputs of this kind
