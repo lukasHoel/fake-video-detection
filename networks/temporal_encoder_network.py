@@ -34,6 +34,8 @@ class TemporalEncoder(nn.Module):
     def create_feature_extractor(self, model_choice="xception"):
         if model_choice == 'xception':
             feature_extractor = xception()
+            for i, param in feature_extractor.named_parameters():
+                param.requires_grad = False
             # Remove fc
             removed = list(feature_extractor.children())[:-1]
             feature_extractor = nn.Sequential(
@@ -47,6 +49,8 @@ class TemporalEncoder(nn.Module):
             if model_choice == 'resnet18':
                 feature_extractor = torchvision.models.resnet18(pretrained=True)
 
+            for i, param in feature_extractor.named_parameters():
+                param.requires_grad = False
             # Remove fc
             removed = list(feature_extractor.children())[:-1]
             feature_extractor = nn.Sequential(*removed)
