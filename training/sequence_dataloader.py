@@ -42,7 +42,7 @@ class FaceForensicsVideosDataset(data.Dataset):
                     # Discard empty sample folders
                     n = len([x for x in os.listdir(s) if os.path.isfile(os.path.join(s, x)) and x.endswith(".png")])
                     if n < sequence_length:
-                        # print(sequence_length, n)
+                        #print(sequence_length, n)
                         continue
 
                     # Generate dict_keys of form f(original)_index for all videos
@@ -147,7 +147,7 @@ class FaceForensicsVideosDataset(data.Dataset):
             # get all images at whole_path/
             image_names = [f for f in os.listdir(whole_path) if
                            os.path.isfile(os.path.join(whole_path, f)) and f.endswith(".png")]
-            image_names = image_names[0:5]
+            image_names = image_names[0:10]
 
             # Read all images into an image list and stack to 1 numpy matrix
             for name in image_names:
