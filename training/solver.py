@@ -17,23 +17,26 @@ class Solver(object):
                          "eps": 1e-8,
                          "weight_decay": 0.0}
 
-    def __init__(self, optim=torch.optim.Adam, optim_args={},
+    def __init__(self,
+                 optim=torch.optim.Adam,
+                 optim_args={},
+                 extra_args={},
                  loss_func=torch.nn.CrossEntropyLoss(),
-                 logging_suffix=None):
+                 log_dir=None):
         optim_args_merged = self.default_adam_args.copy()
         optim_args_merged.update(optim_args)
         self.optim_args = optim_args_merged
         self.optim = optim
         self.loss_func = loss_func
 
-        # Writer will output to ./runs/ directory by default
-        self.writer = SummaryWriter(filename_suffix="_" + logging_suffix, comment="_" + logging_suffix)
-        # TODO how to add adam in this list as string?
+        self.writer = SummaryWriter(log_dir)
         self.hparam_dict = {'loss function': type(self.loss_func).__name__,
+                            'optimizer': self.optim.__name__,
                             'learning rate': self.optim_args['lr'],
-                            'weight_decay': self.optim_args['weight_decay']}
+                            'weight_decay': self.optim_args['weight_decay'],
+                            **extra_args}
 
-        print(self.hparam_dict)
+        print("Hyperparameters of this solver: {}".format(self.hparam_dict))
 
         self._reset_histories()
 
@@ -91,11 +94,6 @@ class Solver(object):
             self.writer.flush()
 
             print("[TEST] mean acc/loss: {acc}/{loss}".format(acc=mean_acc, loss=mean_loss))
-            self.writer.add_hparams(self.hparam_dict, {
-                'HParam/Accuracy/Test/' + test_prefix: mean_acc,
-                'HParam/Loss/Test/' + test_prefix: mean_loss
-            })
-            self.writer.flush()
 
     def train(self, model, train_loader, val_loader, num_epochs=10, log_nth=0):
         """
