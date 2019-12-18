@@ -7,7 +7,7 @@ import math
 
 
 class FaceForensicsVideosDataset(data.Dataset):
-    def __init__(self, directories, sequence_length, generate_coupled=False, transform=None):
+    def __init__(self, directories, num_frames, generate_coupled=False, transform=None):
         """
         Args:
         directories: List of paths where the images for the dataset are
@@ -20,6 +20,7 @@ class FaceForensicsVideosDataset(data.Dataset):
         mapping_dict = {}
         self.dataset_length = 0
         self.num_videos = 0
+        self.num_frames=num_frames
 
         self.frame_dir = {}
         counter = 0
@@ -41,7 +42,7 @@ class FaceForensicsVideosDataset(data.Dataset):
                 for s in sequence_folders:
                     # Discard empty sample folders
                     n = len([x for x in os.listdir(s) if os.path.isfile(os.path.join(s, x)) and x.endswith(".png")])
-                    if n < sequence_length:
+                    if n < self.num_frames:
                         # print(sequence_length, n)
                         continue
 
@@ -147,7 +148,7 @@ class FaceForensicsVideosDataset(data.Dataset):
             # get all images at whole_path/
             image_names = [f for f in os.listdir(whole_path) if
                            os.path.isfile(os.path.join(whole_path, f)) and f.endswith(".png")]
-            image_names = image_names[0:5]
+            image_names = image_names[0:self.num_frames]
 
             # Read all images into an image list and stack to 1 numpy matrix
             for name in image_names:
@@ -155,7 +156,7 @@ class FaceForensicsVideosDataset(data.Dataset):
             image_matrix = np.stack(this_sample)
             samples.append(image_matrix)
         samples = np.stack(samples)
-        sample = {"sequences": samples, "labels": np.stack(label_list)}
+        sample = {"sample": samples, "label": np.stack(label_list)}
 
         if self.transform:
             sample = self.transform(sample)
@@ -167,30 +168,28 @@ class ToTensor(object):
     """Convert ndarrays in sample to Tensors."""
 
     def __call__(self, sample):
-        samples, labels = sample["sequences"], sample["labels"]
+        samples, labels = sample["sample"], sample["label"]
 
         # swap color axis because
         # numpy image: num_frames x H x W x C
         # torch image: num_frames x C X H X W
         samples = torch.from_numpy(samples.transpose((0, 1, 4, 2, 3)))
         labels = torch.tensor(labels[0])
-        return {"image": samples.float(),
+        return {"sample": samples.float(),
                 "label"   : torch.tensor(labels).long()}
 
 
 def my_collate(batch):
-    data = np.concatenate([b["sequences"] for b in batch], axis=0)
-    targets = [b["labels"] for b in batch]
-    sample = {"sequences": data, "labels": targets}
+    data = np.concatenate([b["sample"] for b in batch], axis=0)
+    targets = [b["label"] for b in batch]
+    sample = {"sample": data, "label": targets}
     return sample
 
 
 if __name__ == '__main__':
     # test /example
-    d = [
-            "/home/anna/Desktop/Uni/WiSe19/DL4CV/data/FaceForensics/set1/manipulated_sequences/Deepfakes/c40/sequences_128x128_skip_5_uniform",
-            "/home/anna/Desktop/Uni/WiSe19/DL4CV/data/FaceForensics/set1/original_sequences/youtube/c40/sequences_128x128_skip_5_uniform"]
-    test_dataset = FaceForensicsVideosDataset(d, generate_coupled=False, sequence_length=10, transform=ToTensor())
+    d = ["/home/anna/Desktop/Uni/WiSe19/DL4CV/adl4cv/data/FaceForensics/manipulated_sequences/Deepfakes/c40/sequences_299x299_5seq@10frames_skip_5_uniform"]
+    test_dataset = FaceForensicsVideosDataset(d, generate_coupled=False, num_frames=5, transform=ToTensor())
     print(test_dataset.__len__())
     train_list, val_list = test_dataset.get_train_val_lists(0.9, 0.01)
     print(len(train_list), len(val_list))
@@ -199,7 +198,8 @@ if __name__ == '__main__':
                                                  collate_fn=my_collate,  # use custom collate function here
                                                  pin_memory=True)
 
-    for i, sample in enumerate(dataset_loader):
-        # print("->", sample["sequences"].shape)
-        # print(sample["labels"])
-        pass
+    #for i, sample in enumerate(dataset_loader):
+        #print("->", sample["sample"].shape)
+        #print(sample["label"])
+        #pass
+
