@@ -20,6 +20,7 @@ DATASET_PATHS = {
 }
 COMPRESSION = ['c0', 'c23', 'c40']
 
+
 def extract_from_directory(data_path, dataset, compression,
                            num_sequences=5, frames_per_sequence=10, skip_frames=5,
                            size=128, padding=30,
@@ -77,15 +78,44 @@ def extract_from_directory(data_path, dataset, compression,
 
     # Extract sequences for every video
     for video in tqdm(videos):
-        video_name = video.split('.')[0] # e.g. 000_003
-        mask_path = join(data_path, DATASET_PATHS[dataset], 'masks', 'videos', video) # path to the mask for this video
+        mask_path = get_mask_path(video, join(data_path, DATASET_PATHS['Face2Face'], 'masks', 'videos'))
         sequences = extract_from_video(join(videos_path, video),
                                        int(num_sequences), int(frames_per_sequence), int(skip_frames),
                                        int(size), int(padding),
                                        sample_mode,
                                        mask_path)
+
+        video_name = video.split('.')[0]  # e.g. 000_003
         save_sequences(sequences, join(sequences_path, video_name))
 
+
+def get_mask_path(video, mask_directory):
+    '''
+    Find the corresponding mask for a video name according to FaceForensics dataset structure.
+    e.g. video: 000_003.mp4 gets matched to mask 000_003.mp4 (because is already manipulated video)
+    e.g. video: 000.mp4 gets matched to mask 000_003.mp4 (is original video --> use mask where original was used in a fake)
+
+    :param video: video file name, e.g. 000_003.mp4 - must still have the suffix .mp4 or others!
+    :param mask_directory: where to search for corresponding mask
+    :return: path/to/mask/xxx_yyy.mp4
+    '''
+    video_parts = video.split('_') # split 000_003.mp4 into "000" and "003.mp4"
+    if len(video_parts) == 2:
+        # for videos from the manipulated sequences, use the name directly
+        return join(mask_directory, video)
+    elif len(video_parts) == 1:
+        # for videos from original sequences (named 000.mp4): find a mask with 000_xxx.mp4
+        video_name = video.split('.')[0] # we only compare 000 and not 000.mp4
+        for mask in os.listdir(mask_directory):
+            mask_parts = mask.split('_') # split 000_003.mp4 into "000" and "003.mp4"
+            if video_name == mask_parts[0]:
+                print("Found matching mask for original video {} -> {}".format(video, mask))
+                return join(mask_directory, mask)
+        print("Found no mask for video {}".format(video))
+    else:
+        print("Unsupported file name {} with splits {}".format(video, video_parts))
+
+    return None
 
 def extract_from_video(video_path, num_sequences, frames_per_sequence, skip_frames, size, padding, sample_mode, mask_path):
     print("Extract from video {}".format(video_path))
