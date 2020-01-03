@@ -156,7 +156,7 @@ class FaceForensicsVideosDataset(data.Dataset):
             image_matrix = np.stack(this_sample)
             samples.append(image_matrix)
         samples = np.stack(samples)
-        sample = {"sample": samples, "label": np.stack(label_list)}
+        sample = {"image": samples, "label": np.stack(label_list)}
 
         if self.transform:
             sample = self.transform(sample)
@@ -168,21 +168,21 @@ class ToTensor(object):
     """Convert ndarrays in sample to Tensors."""
 
     def __call__(self, sample):
-        samples, labels = sample["sample"], sample["label"]
+        samples, labels = sample["image"], sample["label"]
 
         # swap color axis because
         # numpy image: num_frames x H x W x C
         # torch image: num_frames x C X H X W
         samples = torch.from_numpy(samples.transpose((0, 1, 4, 2, 3)))
         labels = torch.tensor(labels[0])
-        return {"sample": samples.float(),
+        return {"image": samples.float(),
                 "label"   : torch.tensor(labels).long()}
 
 
 def my_collate(batch):
-    data = np.concatenate([b["sample"] for b in batch], axis=0)
+    data = np.concatenate([b["image"] for b in batch], axis=0)
     targets = [b["label"] for b in batch]
-    sample = {"sample": data, "label": targets}
+    sample = {"image": data, "label": targets}
     return sample
 
 
@@ -199,7 +199,7 @@ if __name__ == '__main__':
                                                  pin_memory=True)
 
     #for i, sample in enumerate(dataset_loader):
-        #print("->", sample["sample"].shape)
+        #print("->", sample["image"].shape)
         #print(sample["label"])
         #pass
 

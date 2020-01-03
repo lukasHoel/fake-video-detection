@@ -74,11 +74,13 @@ class TemporalEncoder(nn.Module):
             nn.Conv2d(in_channels=input_dim, out_channels=input_dim,
                       kernel_size=3, stride=1, padding=1, bias=True),
             activation_block,
-            nn.GroupNorm(num_channels=input_dim, num_groups=int(input_dim/5)),
+            nn.BatchNorm2d(num_features=input_dim),
+            #nn.GroupNorm(num_channels=input_dim, num_groups=int(input_dim/5)),
             nn.Conv2d(in_channels=input_dim, out_channels=input_dim,
                       kernel_size=3, stride=1, padding=1, bias=True),
             activation_block,
-            nn.GroupNorm(num_channels=input_dim, num_groups=int(input_dim / 5)),
+            nn.BatchNorm2d(num_features=input_dim),
+            #nn.GroupNorm(num_channels=input_dim, num_groups=int(input_dim / 5)),
             #Scale down to channels_per_input channels again (e.g. to 256 channels)
             nn.Conv2d(in_channels=input_dim, out_channels=channels_per_input, kernel_size=1)
         )
