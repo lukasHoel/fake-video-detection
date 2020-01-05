@@ -2,6 +2,18 @@ import numpy as np
 import sys
 import cv2
 
+def warp_from_images(img1, img2):
+    flow = calc_flow(img1, img2)
+    warp = warp_flow(img2, flow)
+    return warp
+
+def calc_flow(img1, img2):
+    img1 = cv2.cvtColor(img1.clone(), cv2.COLOR_BGR2GRAY)
+    img2 = cv2.cvtColor(img2.clone(), cv2.COLOR_BGR2GRAY)
+    flow = cv2.calcOpticalFlowFarneback(img1, img2, None, 0.5, 3, 10, 3, 5, 1.1, cv2.OPTFLOW_FARNEBACK_GAUSSIAN)
+
+    return flow
+
 def warp_flow(img, flow):
     h, w = flow.shape[:2]
     flow = -flow
@@ -26,14 +38,11 @@ if __name__ == '__main__':
     img1 = cv2.imread(sys.argv[1])
     img2 = cv2.imread(sys.argv[2])
 
-    img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
-    img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
-
     cv2.imshow("img1", img1)
     cv2.imshow("img2", img2)
     cv2.waitKey()
 
-    flow = cv2.calcOpticalFlowFarneback(img1,img2, None, 0.5, 3, 10, 3, 5, 1.1, cv2.OPTFLOW_FARNEBACK_GAUSSIAN)
+    flow = calc_flow(img1, img2)
     cv2.imshow("flow HSV", draw_hsv(flow))
     cv2.waitKey()
 

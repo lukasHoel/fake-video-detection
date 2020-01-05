@@ -1,4 +1,5 @@
 from networks.xception import xception
+from utils.warp_image_farneback import warp_from_images
 import torch
 import torch.nn as nn
 import torchvision
@@ -10,7 +11,9 @@ class TemporalEncoder(nn.Module):
 
     Adapted slightly from FaceForensics version: https://github.com/ondyari/FaceForensics/blob/master/classification/network/models.py
     """
-    def __init__(self, num_input_images, delta_t=2, feature_dimension=256, model_choice='xception', num_out_classes=2, dropout=0.0):
+    def __init__(self, num_input_images, delta_t=2, feature_dimension=64,
+                 model_choice='xception', num_out_classes=2, dropout=0.0,
+                 useOpticalFlow=True):
         super(TemporalEncoder, self).__init__()
         self.model_choice = model_choice
         self.dropout = dropout
@@ -19,8 +22,9 @@ class TemporalEncoder(nn.Module):
         self.images_in_sequence = 2 * delta_t + 1
         self.num_sequences = num_input_images - 2*delta_t
         self.feature_dimension = feature_dimension
-        self.feature_extractor = self.create_feature_extractor(self.model_choice)
+        self.useOpticalFlow = useOpticalFlow
 
+        self.feature_extractor = self.create_feature_extractor(self.model_choice)
         self.temporal_encoder = self.create_temporal_encoder(num_input=self.images_in_sequence,
                                                              channels_per_input=self.feature_dimension)
 
@@ -54,7 +58,7 @@ class TemporalEncoder(nn.Module):
             # Remove fc
             removed = list(feature_extractor.children())[:-1]
             feature_extractor = nn.Sequential(*removed)
-        else:
+        else: # todo add efficient net via: https://github.com/lukemelas/EfficientNet-PyTorch
             raise Exception('Choose valid model, e.g. resnet50')
 
         return feature_extractor
@@ -96,20 +100,40 @@ class TemporalEncoder(nn.Module):
 
     def forward(self, x):
         image_features = [] # image features of every video frame in x independently
+        flow_features = [] # if optical flow shall be calculated: save it's image features from warped image in this list
         sequence_features = [] # features of every self.delta_t*2 + 1 image features
         predictions = [] # predictions per sequence_feature
 
-        # 1. for every video frame in sequence x: calculate features with self.feature_extractor
+        # 1.a for every video frame in sequence x: calculate features with self.feature_extractor
         for i in range(self.num_input_images):
             x_i = x[:, :, i, :, :, :]
             x_i = x_i.squeeze(dim=1)
             y_i = self.feature_extractor(x_i)
             image_features.append(y_i)
 
-        # 2. concatenate multiple features together and run a CNN block on it (self.temporal_encoder)
-        image_feature_length = len(image_features)
+        # 1.b if optical flow is enabled: calculate optical flow to center of sequence from each image
+        # and save image features of warped image
+        if self.useOpticalFlow:
+            center_image = x[:, :, self.num_input_images//2, :, :]
+            center_image = center_image.squeeze(dim=1)
+            for i in range(self.num_input_images):
+                if i == self.num_input_images//2:
+                    pass
+                    # TODO do we really need to calculate this flow?
+                    # TODO I guess not... how to make sure that this can be skipped in step 2 when selecting from flow_features?
+                x_i = x[:, :, i, :, :, :]
+                x_i = x_i.squeeze(dim=1)
+                warp = warp_from_images(x_i, center_image)
+                y_i = self.feature_extractor(warp)
+                flow_features.append(y_i)
+
+        # 2. concatenate multiple features (normal + flow) together and run a CNN block on it (self.temporal_encoder)
         for i in range(self.num_sequences):
-            features = tuple(image_features[i:i+self.images_in_sequence])
+            if self.useOpticalFlow:
+                features = tuple(image_features[i:i+self.images_in_sequence]+flow_features[i:i+self.images_in_sequence])
+            else:
+                features = tuple(image_features[i:i+self.images_in_sequence])
+
             feature_stack = torch.cat(features, 1)
             y_i = self.temporal_encoder(feature_stack)
             sequence_features.append(y_i)
@@ -131,12 +155,3 @@ class TemporalEncoder(nn.Module):
         y = self.overall_classifier(predictions_stack)
 
         return y
-
-if __name__ == '__main__':
-    model = TemporalEncoder(model_choice='xception', num_out_classes=2, dropout=0.0)
-    #model.train_only_last_layer()
-    #print(model)
-
-    #for name, param in baseline.model.named_parameters():
-    #    if param.requires_grad:
-    #        print("param: {} requires_grad: {}".format(name, param.requires_grad))
