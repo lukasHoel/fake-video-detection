@@ -8,8 +8,8 @@ def warp_from_images(img1, img2):
     return warp
 
 def calc_flow(img1, img2):
-    img1 = cv2.cvtColor(img1.clone(), cv2.COLOR_BGR2GRAY)
-    img2 = cv2.cvtColor(img2.clone(), cv2.COLOR_BGR2GRAY)
+    img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
+    img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
     flow = cv2.calcOpticalFlowFarneback(img1, img2, None, 0.5, 3, 10, 3, 5, 1.1, cv2.OPTFLOW_FARNEBACK_GAUSSIAN)
 
     return flow
@@ -52,5 +52,3 @@ if __name__ == '__main__':
     cv2.imshow("warp-img1", res1)
     cv2.imshow("warp-img2", res2)
     cv2.waitKey()
-
-    cv2.imwrite("warped_farneback.png", res1)

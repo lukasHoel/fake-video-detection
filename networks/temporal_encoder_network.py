@@ -104,18 +104,27 @@ class TemporalEncoder(nn.Module):
         sequence_features = [] # features of every self.delta_t*2 + 1 image features
         predictions = [] # predictions per sequence_feature
 
+        print("Start forward pass")
         # 1.a for every video frame in sequence x: calculate features with self.feature_extractor
         for i in range(self.num_input_images):
             x_i = x[:, :, i, :, :, :]
             x_i = x_i.squeeze(dim=1)
             y_i = self.feature_extractor(x_i)
             image_features.append(y_i)
+        print("Image feature extraction finished")
 
         # 1.b if optical flow is enabled: calculate optical flow to center of sequence from each image
         # and save image features of warped image
         if self.useOpticalFlow:
-            center_image = x[:, :, self.num_input_images//2, :, :]
+            device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+            center_image = x[:, :, self.num_input_images//2, :, :, :]
             center_image = center_image.squeeze(dim=1)
+            center_image = center_image.data.cpu().numpy()
+
+            # TODO need to loop through batch?
+            # TODO order of numpy array must be HxWxC but currently is Cx?x? --> must also reverse this back...
+            
+
             for i in range(self.num_input_images):
                 if i == self.num_input_images//2:
                     pass
@@ -123,9 +132,12 @@ class TemporalEncoder(nn.Module):
                     # TODO I guess not... how to make sure that this can be skipped in step 2 when selecting from flow_features?
                 x_i = x[:, :, i, :, :, :]
                 x_i = x_i.squeeze(dim=1)
-                warp = warp_from_images(x_i, center_image)
+
+                warp = warp_from_images(x_i.data.cpu().numpy(), center_image)
+                warp =  torch.from_numpy(warp).float().to(device)
                 y_i = self.feature_extractor(warp)
                 flow_features.append(y_i)
+        print("Flow feature extraction finished")
 
         # 2. concatenate multiple features (normal + flow) together and run a CNN block on it (self.temporal_encoder)
         for i in range(self.num_sequences):
@@ -137,6 +149,7 @@ class TemporalEncoder(nn.Module):
             feature_stack = torch.cat(features, 1)
             y_i = self.temporal_encoder(feature_stack)
             sequence_features.append(y_i)
+        print("Temporal encoding finished")
 
         # 3. for every temporal_encoder output: run FC layer and do classification
         for i in range(len(sequence_features)):
@@ -153,5 +166,6 @@ class TemporalEncoder(nn.Module):
                 # or: learn it!
         predictions_stack = torch.cat(tuple(predictions), 1)
         y = self.overall_classifier(predictions_stack)
+        print("Forward pass finished")
 
         return y
