@@ -1,3 +1,5 @@
+from utils.warp_image_farneback import warp_from_images
+
 from skimage import io
 from torch.utils import data
 import torch
@@ -8,7 +10,7 @@ from tqdm.auto import tqdm
 
 
 class FaceForensicsVideosDataset(data.Dataset):
-    def __init__(self, directories, num_frames, generate_coupled=False, transform=None, max_number_videos_per_directory=-1):
+    def __init__(self, directories, num_frames, generate_coupled=False, transform=None, max_number_videos_per_directory=-1, calculateOpticalFlow=True, verbose=False):
         """
         Args:
         directories: List of paths where the images for the dataset are
@@ -23,11 +25,16 @@ class FaceForensicsVideosDataset(data.Dataset):
         self.num_videos = 0
         self.num_frames=num_frames
         self.max_number_videos_per_directory = max_number_videos_per_directory
-
+        self.calculateOpticalFlow = calculateOpticalFlow
+        self.verbose = verbose
         self.frame_dir = {}
         counter = 0
+        number_directories = 0
         for path in directories:
             # Get all folders with videos in the directory at path
+            number_directories += 1
+            print("Loading directory {}/{}: {}".format(number_directories, len(directories), path))
+
             number_videos_for_directory = 0
             video_folders = [f for f in os.listdir(path) if not os.path.isfile(os.path.join(path, f))]
             for f in tqdm(video_folders):
@@ -65,18 +72,14 @@ class FaceForensicsVideosDataset(data.Dataset):
                                    os.path.isfile(os.path.join(s, f)) and f.endswith(".png")]
                     image_names = image_names[0:self.num_frames]
 
-                    #this_sample = []
-
-                    # Read all images into an image list and stack to 1 numpy matrix
+                    # Read all image file names into a list for lazy-loading upon first get_item request
                     image_paths = []
                     for name in image_names:
                         image_paths.append(s + "/" + name)
-                        #this_sample.append(io.imread(s + "/" + name))
-                    #image_matrix = np.stack(this_sample)
 
                     key = counter
                     counter += 1
-                    self.frame_dir[key] = (False, image_paths, label)
+                    self.frame_dir[key] = (False, image_paths, label, None)
         self.dataset_length = counter
 
     # number of samples in the dataset
@@ -133,20 +136,40 @@ class FaceForensicsVideosDataset(data.Dataset):
         if torch.is_tensor(idx):
             idx = idx.tolist()
 
-        is_loaded, sequence, label = self.frame_dir[idx]
+        is_loaded, sequence, label, warp = self.frame_dir[idx]
 
+        # lazy-load sequence when it is requested for the first time
         if not is_loaded:
-            print("Sequence {} not loaded, will load now".format(idx))
             this_sample = []
-            for name in tqdm(sequence):
-                this_sample.append(io.imread(name))
+            if self.verbose:
+                print("loading new sequence into cache")
+                for name in tqdm(sequence):
+                    this_sample.append(io.imread(name))
+            else:
+                for name in sequence: # iterate without tqdm(...)
+                    this_sample.append(io.imread(name))
             sequence = np.stack(this_sample)
-            self.frame_dir[idx] = (True, sequence, label)
-            print("Loaded sequence {} into global dataset directory".format(idx))
 
+            if self.calculateOpticalFlow:
+                warp = []
+                n = sequence.shape[0]
+                center_image = sequence[n//2]
+                if self.verbose:
+                    print("calculating and loading optical-flow warp into cache")
+                    for i in tqdm(range(n)):
+                        warp.append(warp_from_images(sequence[i], center_image))
+                else:
+                    for i in range(n): # iterate without tqdm(...)
+                        warp.append(warp_from_images(sequence[i], center_image))
+                warp = np.stack(warp)
+
+            self.frame_dir[idx] = (True, sequence, label, warp)
+
+        # todo why do we need these two lines? in the models, we squeeze the extra dimension everytime?
         samples = np.stack([sequence])
-        #print(samples.shape)
-        sample = {"image": samples, "label": label}
+        warps = np.stack([warp])
+
+        sample = {"image": samples, "label": label, "warp": warps}
 
         if self.transform:
             sample = self.transform(sample)
@@ -158,21 +181,24 @@ class ToTensor(object):
     """Convert ndarrays in sample to Tensors."""
 
     def __call__(self, sample):
-        samples, labels = sample["image"], sample["label"]
+        samples, labels, warps = sample["image"], sample["label"], sample["warp"]
 
         # swap color axis because
         # numpy image: num_frames x H x W x C
         # torch image: num_frames x C X H X W
         samples = torch.from_numpy(samples.transpose((0, 1, 4, 2, 3)))
+        warps = torch.from_numpy(warps.transpose((0, 1, 4, 2, 3)))
         labels = torch.tensor(labels)
         return {"image": samples.float(),
-                "label"   : torch.tensor(labels).long()}
+                "label": labels.long(),
+                "warp": warps.float()}
 
 
 def my_collate(batch):
     data = np.concatenate([b["image"] for b in batch], axis=0)
     targets = [b["label"] for b in batch]
-    sample = {"image": data, "label": targets}
+    warp = [b["warp"] for b in batch]
+    sample = {"image": data, "label": targets, "warp": warp}
     return sample
 
 

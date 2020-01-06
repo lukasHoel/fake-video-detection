@@ -11,6 +11,13 @@ def wrap_data(xb, yb, device):
 
     return xb, yb
 
+def wrap_data(xb, yb, warpb, device):
+    xb, yb, warpb = Variable(xb), Variable(yb), Variable(warpb)
+    if str(device) != 'cpu':
+        xb, yb, warpb = xb.cuda(), yb.cuda(), warpb.cuda()
+
+    return xb, yb, warpb
+
 class Solver(object):
     default_adam_args = {"lr": 1e-4,
                          "betas": (0.9, 0.999),
@@ -49,6 +56,24 @@ class Solver(object):
         self.val_acc_history = []
         self.val_loss_history = []
 
+    def forward_pass(self, model, sample, device):
+        xb = sample["image"]
+        yb = sample["label"]
+        warpb = sample.get("warp") # use get function here to ensure None is returned if key is not set instead of KeyError: https://stackoverflow.com/questions/6130768/return-none-if-dictionary-key-is-not-available
+
+        if warpb is not None:
+            xb, yb, warpb = wrap_data(xb, yb, warpb, device)
+            x = {"image": xb, "warp": warpb} # by convention this is the input to the model when optical_flow is available
+            scores = model(x)
+        else:
+            xb, yb = wrap_data(xb, yb, device)
+            scores = model(xb)
+
+        loss = self.loss_func(scores, yb)
+        acc = self.accuracy(scores, yb)
+
+        return loss, acc
+
     def test(self, model, test_loader, test_prefix='/', log_nth=0):
         device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         model.to(device)
@@ -63,17 +88,9 @@ class Solver(object):
             test_losses = []
             test_accs = []
             for i, sample in enumerate(test_loader):
-                xb = sample["image"]
-                yb = sample["label"]
-                xb, yb = wrap_data(xb, yb, device)
-
-                # FORWARD PASS --> Loss calculation
-                scores = model(xb)
-                loss = self.loss_func(scores, yb)
+                loss, test_acc = self.forward_pass(model, sample, device)
                 loss = loss.data.cpu().numpy()
                 test_losses.append(loss)
-
-                test_acc = self.accuracy(scores, yb)
                 test_accs.append(test_acc)
 
                 self.writer.add_scalar('Test/' + test_prefix + 'Batch/Loss', loss, i)
@@ -118,13 +135,8 @@ class Solver(object):
             train_losses = []
             train_accs = []
             for i, sample in enumerate(train_loader):  # for every minibatch in training set
-                xb = sample["image"]
-                yb = sample["label"]
-                xb, yb = wrap_data(xb, yb, device)
-
-                # FORWARD PASS --> Loss calculation
-                scores = model(xb)
-                train_loss = self.loss_func(scores, yb)
+                # FORWARD PASS --> Loss + acc calculation
+                train_loss, train_acc = self.forward_pass(model, sample, device)
 
                 # BACKWARD PASS --> Gradient-Descent update
                 train_loss.backward()
@@ -134,8 +146,6 @@ class Solver(object):
                 # LOGGING of loss and accuracy
                 train_loss = train_loss.data.cpu().numpy()
                 train_losses.append(train_loss)
-
-                train_acc = self.accuracy(scores, yb)
                 train_accs.append(train_acc)
 
                 self.writer.add_scalar('Batch/Loss/Train', train_loss, i + epoch * iter_per_epoch)
@@ -169,17 +179,10 @@ class Solver(object):
                 val_losses = []
                 val_accs = []
                 for i, sample in enumerate(val_loader):
-                    xb = sample["image"]
-                    yb = sample["label"]
-                    xb, yb = wrap_data(xb, yb, device)
-
-                    # FORWARD PASS --> Loss calculation
-                    scores = model(xb)
-                    val_loss = self.loss_func(scores, yb)
+                    # FORWARD PASS --> Loss + acc calculation
+                    val_loss, val_acc = self.forward_pass(model, sample, device)
                     val_loss = val_loss.data.cpu().numpy()
                     val_losses.append(val_loss)
-
-                    val_acc = self.accuracy(scores, yb)
                     val_accs.append(val_acc)
 
                     self.writer.add_scalar('Batch/Loss/Val', val_loss, i + epoch*len(val_loader))

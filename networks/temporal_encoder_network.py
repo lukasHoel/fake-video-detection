@@ -105,50 +105,31 @@ class TemporalEncoder(nn.Module):
         )
 
     def forward(self, x):
+        # by convention (see also solver) this is how the input is delivered depending on optical flow available
+        if self.useOpticalFlow:
+            images = x["image"]
+            warps = x["warp"]
+        else:
+            images = x
+
         image_features = [] # image features of every video frame in x independently
         flow_features = [] # if optical flow shall be calculated: save it's image features from warped image in this list
-        sequence_features = [] # features of every self.delta_t*2 + 1 image features
+        sequence_features = [] # features of every self.delta_t*2 + 1 image (and flow) features
         predictions = [] # predictions per sequence_feature
 
         #print("Start forward pass")
         # 1.a for every video frame in sequence x: calculate features with self.feature_extractor
         for i in range(self.num_input_images):
-            x_i = x[:, :, i, :, :, :]
+            x_i = images[:, :, i, :, :, :]
             x_i = x_i.squeeze() # remove dim=(1,2)
             y_i = self.feature_extractor(x_i)
             image_features.append(y_i)
         #print("Image feature extraction finished")
 
-        # 1.b if optical flow is enabled: calculate optical flow to center of sequence from each image
-        # and save image features of warped image
+        # 1.b if optical flow is enabled: calculate image features of warped image in each sequence
         if self.useOpticalFlow:
-            device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-            center_images = x[:, :, self.num_input_images//2, :, :, :]
-            center_images = center_images.squeeze() # remove dim=(1,2)
-
-            warp_images = torch.zeros_like(x)
-
-            for b in range(center_images.shape[0]):
-                center_image = center_images[b].data.cpu().numpy()
-                center_image = center_image.transpose((1,2,0))
-
-                for i in range(self.num_input_images):
-                    if i == self.num_input_images//2:
-                        pass
-                        # TODO do we really need to calculate this flow?
-                        # TODO I guess not... how to make sure that this can be skipped in step 2 when selecting from flow_features?
-                    x_i = x[b, :, i, :, :, :]
-                    x_i = x_i.squeeze() # remove dim=(1,2)
-                    x_i = x_i.data.cpu().numpy()
-                    x_i = x_i.transpose((1,2,0))
-
-                    warp = warp_from_images(x_i, center_image)
-                    warp = warp.transpose((2,0,1))
-                    warp = torch.from_numpy(warp).float().to(device)
-                    warp_images[b, :, i] = warp
-            #print("Flow calculation finished")
             for i in range(self.num_input_images):
-                x_i = warp_images[:, :, i, :, :, :]
+                x_i = warps[:, :, i, :, :, :]
                 x_i = x_i.squeeze()  # remove dim=(1,2)
                 y_i = self.feature_extractor(x_i)
                 flow_features.append(y_i)
