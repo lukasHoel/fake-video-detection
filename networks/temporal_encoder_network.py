@@ -110,14 +110,14 @@ class TemporalEncoder(nn.Module):
         sequence_features = [] # features of every self.delta_t*2 + 1 image features
         predictions = [] # predictions per sequence_feature
 
-        print("Start forward pass")
+        #print("Start forward pass")
         # 1.a for every video frame in sequence x: calculate features with self.feature_extractor
         for i in range(self.num_input_images):
             x_i = x[:, :, i, :, :, :]
             x_i = x_i.squeeze() # remove dim=(1,2)
             y_i = self.feature_extractor(x_i)
             image_features.append(y_i)
-        print("Image feature extraction finished")
+        #print("Image feature extraction finished")
 
         # 1.b if optical flow is enabled: calculate optical flow to center of sequence from each image
         # and save image features of warped image
@@ -146,13 +146,13 @@ class TemporalEncoder(nn.Module):
                     warp = warp.transpose((2,0,1))
                     warp = torch.from_numpy(warp).float().to(device)
                     warp_images[b, :, i] = warp
-            print("Flow calculation finished")
+            #print("Flow calculation finished")
             for i in range(self.num_input_images):
                 x_i = warp_images[:, :, i, :, :, :]
                 x_i = x_i.squeeze()  # remove dim=(1,2)
                 y_i = self.feature_extractor(x_i)
                 flow_features.append(y_i)
-            print("Flow feature extraction finished")
+            #print("Flow feature extraction finished")
 
         # 2. concatenate multiple features (normal + flow) together and run a CNN block on it (self.temporal_encoder)
         for i in range(self.num_sequences):
@@ -164,7 +164,7 @@ class TemporalEncoder(nn.Module):
             feature_stack = torch.cat(features, 1)
             y_i = self.temporal_encoder(feature_stack)
             sequence_features.append(y_i)
-        print("Temporal encoding finished")
+        #print("Temporal encoding finished")
 
         # 3. for every temporal_encoder output: run FC layer and do classification
         for i in range(len(sequence_features)):
@@ -181,6 +181,6 @@ class TemporalEncoder(nn.Module):
                 # or: learn it!
         predictions_stack = torch.cat(tuple(predictions), 1)
         y = self.overall_classifier(predictions_stack)
-        print("Forward pass finished")
+        #print("Forward pass finished")
 
         return y

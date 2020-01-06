@@ -4,10 +4,11 @@ import torch
 import os
 import numpy as np
 import math
+from tqdm.auto import tqdm
 
 
 class FaceForensicsVideosDataset(data.Dataset):
-    def __init__(self, directories, num_frames, generate_coupled=False, transform=None):
+    def __init__(self, directories, num_frames, generate_coupled=False, transform=None, max_number_videos_per_directory=-1):
         """
         Args:
         directories: List of paths where the images for the dataset are
@@ -21,14 +22,20 @@ class FaceForensicsVideosDataset(data.Dataset):
         self.dataset_length = 0
         self.num_videos = 0
         self.num_frames=num_frames
+        self.max_number_videos_per_directory = max_number_videos_per_directory
 
         self.frame_dir = {}
         counter = 0
         for path in directories:
             # Get all folders with videos in the directory at path
+            number_videos_for_directory = 0
             video_folders = [f for f in os.listdir(path) if not os.path.isfile(os.path.join(path, f))]
-            for f in video_folders:
+            for f in tqdm(video_folders):
+                if self.max_number_videos_per_directory >= 0 and number_videos_for_directory >= self.max_number_videos_per_directory:
+                    print("Reached maximum number of videos per directory ({}), will skip the rest.".format(number_videos_for_directory))
+                    break
                 self.num_videos += 1
+                number_videos_for_directory += 1
                 # process video name to know how it was generated
                 name_split = f.split("_")
                 if len(name_split) == 1:
@@ -58,16 +65,18 @@ class FaceForensicsVideosDataset(data.Dataset):
                                    os.path.isfile(os.path.join(s, f)) and f.endswith(".png")]
                     image_names = image_names[0:self.num_frames]
 
-                    this_sample = []
+                    #this_sample = []
 
                     # Read all images into an image list and stack to 1 numpy matrix
+                    image_paths = []
                     for name in image_names:
-                        this_sample.append(io.imread(s + "/" + name))
-                    image_matrix = np.stack(this_sample)
+                        image_paths.append(s + "/" + name)
+                        #this_sample.append(io.imread(s + "/" + name))
+                    #image_matrix = np.stack(this_sample)
 
                     key = counter
                     counter += 1
-                    self.frame_dir[key] = (image_matrix, label)
+                    self.frame_dir[key] = (False, image_paths, label)
         self.dataset_length = counter
 
     # number of samples in the dataset
@@ -124,11 +133,19 @@ class FaceForensicsVideosDataset(data.Dataset):
         if torch.is_tensor(idx):
             idx = idx.tolist()
 
+        is_loaded, sequence, label = self.frame_dir[idx]
 
-        sequence, label = self.frame_dir[idx]
+        if not is_loaded:
+            print("Sequence {} not loaded, will load now".format(idx))
+            this_sample = []
+            for name in tqdm(sequence):
+                this_sample.append(io.imread(name))
+            sequence = np.stack(this_sample)
+            self.frame_dir[idx] = (True, sequence, label)
+            print("Loaded sequence {} into global dataset directory".format(idx))
 
         samples = np.stack([sequence])
-        print(samples.shape)
+        #print(samples.shape)
         sample = {"image": samples, "label": label}
 
         if self.transform:
