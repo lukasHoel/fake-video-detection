@@ -11,7 +11,7 @@ class TemporalEncoder(nn.Module):
 
     Adapted slightly from FaceForensics version: https://github.com/ondyari/FaceForensics/blob/master/classification/network/models.py
     """
-    def __init__(self, num_input_images, delta_t=2, feature_dimension=64,
+    def __init__(self, num_input_images, delta_t=2, feature_dimension=64, temporal_encoder_depth=5,
                  model_choice='xception', num_out_classes=2, dropout=0.0,
                  useOpticalFlow=True):
         super(TemporalEncoder, self).__init__()
@@ -19,14 +19,18 @@ class TemporalEncoder(nn.Module):
         self.dropout = dropout
         self.num_input_images = num_input_images
         self.delta_t = delta_t
+        self.temporal_encoder_depth = temporal_encoder_depth
         self.images_in_sequence = 2 * delta_t + 1
+        if useOpticalFlow:
+            self.images_in_sequence *= 2
         self.num_sequences = num_input_images - 2*delta_t
         self.feature_dimension = feature_dimension
         self.useOpticalFlow = useOpticalFlow
 
         self.feature_extractor = self.create_feature_extractor(self.model_choice)
         self.temporal_encoder = self.create_temporal_encoder(num_input=self.images_in_sequence,
-                                                             channels_per_input=self.feature_dimension)
+                                                             channels_per_input=self.feature_dimension,
+                                                             depth=temporal_encoder_depth)
 
         # 10*10 comes from spatial domain resoltuion from xception net
         # todo not hardcode!
@@ -63,7 +67,7 @@ class TemporalEncoder(nn.Module):
 
         return feature_extractor
 
-    def create_temporal_encoder(self, num_input, channels_per_input):
+    def create_temporal_encoder(self, num_input, channels_per_input, depth):
         input_dim = num_input*channels_per_input
 
         if self.dropout > 0:
@@ -74,19 +78,21 @@ class TemporalEncoder(nn.Module):
         else:
             activation_block = nn.ReLU()
 
+        convs = []
+        for i in range(depth):
+            convs.append(nn.Sequential(
+                nn.Conv2d(in_channels=input_dim, out_channels=input_dim,
+                          kernel_size=3, stride=1, padding=1, bias=True),
+                activation_block,
+                # nn.GroupNorm(num_channels=input_dim, num_groups=int(input_dim/5)),
+                nn.BatchNorm2d(num_features=input_dim)
+            ))
+
         temporal_encoder = nn.Sequential(
-            nn.Conv2d(in_channels=input_dim, out_channels=input_dim,
-                      kernel_size=3, stride=1, padding=1, bias=True),
-            activation_block,
-            nn.BatchNorm2d(num_features=input_dim),
-            #nn.GroupNorm(num_channels=input_dim, num_groups=int(input_dim/5)),
-            nn.Conv2d(in_channels=input_dim, out_channels=input_dim,
-                      kernel_size=3, stride=1, padding=1, bias=True),
-            activation_block,
-            nn.BatchNorm2d(num_features=input_dim),
-            #nn.GroupNorm(num_channels=input_dim, num_groups=int(input_dim / 5)),
+            *convs,
             #Scale down to channels_per_input channels again (e.g. to 256 channels)
-            nn.Conv2d(in_channels=input_dim, out_channels=channels_per_input, kernel_size=1)
+            nn.Conv2d(in_channels=input_dim, out_channels=channels_per_input, kernel_size=1),
+            activation_block
         )
 
         return temporal_encoder
@@ -108,7 +114,7 @@ class TemporalEncoder(nn.Module):
         # 1.a for every video frame in sequence x: calculate features with self.feature_extractor
         for i in range(self.num_input_images):
             x_i = x[:, :, i, :, :, :]
-            x_i = x_i.squeeze(dim=1)
+            x_i = x_i.squeeze() # remove dim=(1,2)
             y_i = self.feature_extractor(x_i)
             image_features.append(y_i)
         print("Image feature extraction finished")
@@ -117,32 +123,41 @@ class TemporalEncoder(nn.Module):
         # and save image features of warped image
         if self.useOpticalFlow:
             device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-            center_image = x[:, :, self.num_input_images//2, :, :, :]
-            center_image = center_image.squeeze(dim=1)
-            center_image = center_image.data.cpu().numpy()
+            center_images = x[:, :, self.num_input_images//2, :, :, :]
+            center_images = center_images.squeeze() # remove dim=(1,2)
 
-            # TODO need to loop through batch?
-            # TODO order of numpy array must be HxWxC but currently is Cx?x? --> must also reverse this back...
-            
+            warp_images = torch.zeros_like(x)
 
+            for b in range(center_images.shape[0]):
+                center_image = center_images[b].data.cpu().numpy()
+                center_image = center_image.transpose((1,2,0))
+
+                for i in range(self.num_input_images):
+                    if i == self.num_input_images//2:
+                        pass
+                        # TODO do we really need to calculate this flow?
+                        # TODO I guess not... how to make sure that this can be skipped in step 2 when selecting from flow_features?
+                    x_i = x[b, :, i, :, :, :]
+                    x_i = x_i.squeeze() # remove dim=(1,2)
+                    x_i = x_i.data.cpu().numpy()
+                    x_i = x_i.transpose((1,2,0))
+
+                    warp = warp_from_images(x_i, center_image)
+                    warp = warp.transpose((2,0,1))
+                    warp = torch.from_numpy(warp).float().to(device)
+                    warp_images[b, :, i] = warp
+            print("Flow calculation finished")
             for i in range(self.num_input_images):
-                if i == self.num_input_images//2:
-                    pass
-                    # TODO do we really need to calculate this flow?
-                    # TODO I guess not... how to make sure that this can be skipped in step 2 when selecting from flow_features?
-                x_i = x[:, :, i, :, :, :]
-                x_i = x_i.squeeze(dim=1)
-
-                warp = warp_from_images(x_i.data.cpu().numpy(), center_image)
-                warp =  torch.from_numpy(warp).float().to(device)
-                y_i = self.feature_extractor(warp)
+                x_i = warp_images[:, :, i, :, :, :]
+                x_i = x_i.squeeze()  # remove dim=(1,2)
+                y_i = self.feature_extractor(x_i)
                 flow_features.append(y_i)
-        print("Flow feature extraction finished")
+            print("Flow feature extraction finished")
 
         # 2. concatenate multiple features (normal + flow) together and run a CNN block on it (self.temporal_encoder)
         for i in range(self.num_sequences):
             if self.useOpticalFlow:
-                features = tuple(image_features[i:i+self.images_in_sequence]+flow_features[i:i+self.images_in_sequence])
+                features = tuple(image_features[i:i+self.images_in_sequence//2]+flow_features[i:i+self.images_in_sequence//2])
             else:
                 features = tuple(image_features[i:i+self.images_in_sequence])
 
