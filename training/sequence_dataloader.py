@@ -187,11 +187,16 @@ class ToTensor(object):
         # numpy image: num_frames x H x W x C
         # torch image: num_frames x C X H X W
         samples = torch.from_numpy(samples.transpose((0, 1, 4, 2, 3)))
-        warps = torch.from_numpy(warps.transpose((0, 1, 4, 2, 3)))
         labels = torch.tensor(labels)
-        return {"image": samples.float(),
-                "label": labels.long(),
-                "warp": warps.float()}
+
+        result = {"image": samples.float(),
+                  "label": labels.long()}
+
+        if warps is not None and None not in warps:
+            warps = torch.from_numpy(warps.transpose((0, 1, 4, 2, 3)))
+            result["warp"] = warps.float()
+
+        return result
 
 
 def my_collate(batch):
