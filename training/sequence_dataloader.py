@@ -98,6 +98,7 @@ class FaceForensicsVideosDataset(data.Dataset):
                 label_list[-1][1] += 1
             else:
                 label_list.append([key, 0])
+                last_label = not last_label
 
         val_list = []
         train_list = []
