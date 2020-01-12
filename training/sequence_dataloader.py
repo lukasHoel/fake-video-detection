@@ -146,7 +146,6 @@ class FaceForensicsVideosDataset(data.Dataset):
                 for name in sequence: # iterate without tqdm(...)
                     this_sample.append(io.imread(name))
             sequence = np.stack(this_sample)
-
             if self.calculateOpticalFlow:
                 warp = []
                 n = sequence.shape[0]
@@ -184,10 +183,7 @@ class ToTensor(object):
         # numpy image: num_frames x H x W x C
         # torch image: num_frames x C X H X W
         samples = torch.from_numpy(samples.transpose((0, 1, 4, 2, 3)))
-        if len(warps.shape) == 5:
-            warps = torch.from_numpy(warps.transpose((0, 1, 4, 2, 3)))
-        else:
-            warps = torch.Tensor(0)
+        warps = torch.from_numpy(warps.transpose((0, 1, 4, 2, 3)))
         labels = torch.tensor(labels)
         return {"image": samples.float(),
                 "label": labels.long(),
@@ -203,19 +199,22 @@ def my_collate(batch):
 
 
 if __name__ == '__main__':
+    from torch.utils.data.sampler import SubsetRandomSampler
+
     # test /example
-    d = ["/home/anna/Desktop/Uni/WiSe19/DL4CV/adl4cv/data/FaceForensics/manipulated_sequences/Deepfakes/c40/sequences_299x299_5seq@10frames_skip_5_uniform"]
-    test_dataset = FaceForensicsVideosDataset(d, generate_coupled=False, num_frames=5, transform=ToTensor())
+    d = ["/home/anna/Desktop/Uni/WiSe19/DL4CV/adl4cv/data/FaceForensics/original_sequences/youtube/c40/sequences_299x299_5seq@10frames_skip_5_uniform",
+        "/home/anna/Desktop/Uni/WiSe19/DL4CV/adl4cv/data/FaceForensics/manipulated_sequences/Deepfakes/c40/sequences_299x299_5seq@10frames_skip_5_uniform"]
+
+
+    test_dataset = FaceForensicsVideosDataset(d, generate_coupled=False, num_frames=10, calculateOpticalFlow=False, transform=ToTensor())
     print(test_dataset.__len__())
-    train_list, val_list = test_dataset.get_train_val_lists(0.9, 0.01)
+    train_list, val_list = test_dataset.get_train_val_lists(0.1, 0.1)
     print(len(train_list), len(val_list))
     dataset_loader = torch.utils.data.DataLoader(test_dataset,
                                                  batch_size=4, shuffle=True,
                                                  collate_fn=my_collate,  # use custom collate function here
                                                  pin_memory=True)
 
-    for i, sample in enumerate(dataset_loader):
-        print("->", sample["image"].shape)
-        print(sample["label"])
-        pass
+
+
 
