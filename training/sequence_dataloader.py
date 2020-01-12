@@ -1,4 +1,4 @@
-#from utils.warp_image_farneback import warp_from_images
+from utils.warp_image_farneback import warp_from_images
 from skimage import io
 from torch.utils import data
 import torch
