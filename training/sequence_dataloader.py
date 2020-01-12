@@ -184,11 +184,16 @@ class ToTensor(object):
         # numpy image: num_frames x H x W x C
         # torch image: num_frames x C X H X W
         samples = torch.from_numpy(samples.transpose((0, 1, 4, 2, 3)))
-        warps = torch.from_numpy(warps.transpose((0, 1, 4, 2, 3)))
         labels = torch.tensor(labels)
-        return {"image": samples.float(),
-                "label": labels.long(),
-                "warp": warps.float()}
+
+        result = {"image": samples.float(),
+                  "label": labels.long()}
+
+        if warps is not None and None not in warps:
+            warps = torch.from_numpy(warps.transpose((0, 1, 4, 2, 3)))
+            result["warp"] = warps.float()
+
+        return result
 
 
 def my_collate(batch):
@@ -200,22 +205,59 @@ def my_collate(batch):
 
 
 if __name__ == '__main__':
+    # test /example
+    d = [
+        "C:/Users/admin/Google Drive/FaceForensics_Sequences/original_sequences/youtube/c40/sequences_299x299_5seq@10frames_skip_5_uniform",
+        "C:/Users/admin/Google Drive/FaceForensics_Sequences/manipulated_sequences/Deepfakes/c40/sequences_299x299_5seq@10frames_skip_5_uniform"]
+    test_dataset = FaceForensicsVideosDataset(d, generate_coupled=False, num_frames=10, transform=ToTensor(),
+                                              max_number_videos_per_directory=4)
+    print(test_dataset.__len__())
+    train_list, val_list = test_dataset.get_train_val_lists(0.8, 0.2)
+    print(len(train_list), len(val_list))
+
     from torch.utils.data.sampler import SubsetRandomSampler
 
-    # test /example
-    d = ["/home/anna/Desktop/Uni/WiSe19/DL4CV/adl4cv/data/FaceForensics/original_sequences/youtube/c40/sequences_299x299_5seq@10frames_skip_5_uniform",
-        "/home/anna/Desktop/Uni/WiSe19/DL4CV/adl4cv/data/FaceForensics/manipulated_sequences/Deepfakes/c40/sequences_299x299_5seq@10frames_skip_5_uniform"]
+    train_sampler = SubsetRandomSampler(train_list)
+    valid_sampler = SubsetRandomSampler(val_list)
 
+    # Should set num_workers=0, otherwise the caching in the dataset does not work... but why?
+    train_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1,
+                                               sampler=train_sampler,
+                                               num_workers=1)
 
-    test_dataset = FaceForensicsVideosDataset(d, generate_coupled=False, num_frames=10, calculateOpticalFlow=False, transform=ToTensor())
-    print(test_dataset.__len__())
-    train_list, val_list = test_dataset.get_train_val_lists(0.1, 0.1)
-    print(len(train_list), len(val_list))
+    validation_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1,
+                                                    sampler=valid_sampler,
+                                                    num_workers=1)
+    sum_0 = 0
+    sum_1 = 0
+    for v in list(validation_loader):
+
+        if v["label"].data.cpu().numpy()[0] == 0:
+            sum_0 += 1
+        else:
+            sum_1 += 1
+
+    print("validation loader has {} zeros and {} ones out of total {}".format(sum_0, sum_1, len(validation_loader)))
+
+    sum_0 = 0
+    sum_1 = 0
+    for v in list(train_loader):
+
+        if v["label"].data.cpu().numpy()[0] == 0:
+            sum_0 += 1
+        else:
+            sum_1 += 1
+
+    print("train loader has {} zeros and {} ones out of total {}".format(sum_0, sum_1, len(train_loader)))
+
+    '''
     dataset_loader = torch.utils.data.DataLoader(test_dataset,
                                                  batch_size=4, shuffle=True,
                                                  collate_fn=my_collate,  # use custom collate function here
                                                  pin_memory=True)
 
-
+    for i, sample in enumerate(dataset_loader):
+        print(sample["label"])
+    '''
 
 
