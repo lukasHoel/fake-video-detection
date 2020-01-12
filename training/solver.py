@@ -11,7 +11,7 @@ def wrap_data(xb, yb, device):
 
     return xb, yb
 
-def wrap_data(xb, yb, warpb, device):
+def wrap_data_with_warp(xb, yb, warpb, device):
     xb, yb, warpb = Variable(xb), Variable(yb), Variable(warpb)
     if str(device) != 'cpu':
         xb, yb, warpb = xb.cuda(), yb.cuda(), warpb.cuda()
@@ -62,7 +62,7 @@ class Solver(object):
         warpb = sample.get("warp") # use get function here to ensure None is returned if key is not set instead of KeyError: https://stackoverflow.com/questions/6130768/return-none-if-dictionary-key-is-not-available
 
         if warpb is not None:
-            xb, yb, warpb = wrap_data(xb, yb, warpb, device)
+            xb, yb, warpb = wrap_data_with_warp(xb, yb, warpb, device)
             x = {"image": xb, "warp": warpb} # by convention this is the input to the model when optical_flow is available
             scores = model(x)
         else:

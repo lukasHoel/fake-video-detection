@@ -6,7 +6,6 @@ import os
 import numpy as np
 import math
 from tqdm.auto import tqdm
-from torch.utils.data.sampler import SubsetRandomSampler
 
 
 class FaceForensicsVideosDataset(data.Dataset):
@@ -99,7 +98,6 @@ class FaceForensicsVideosDataset(data.Dataset):
                 label_list[-1][1] += 1
             else:
                 label_list.append([key, 0])
-                last_label = not last_label
 
         val_list = []
         train_list = []
@@ -205,32 +203,19 @@ def my_collate(batch):
 
 
 if __name__ == '__main__':
-    from torch.utils.data.sampler import SubsetRandomSampler
-
     # test /example
-    d = ["/home/anna/Desktop/Uni/WiSe19/DL4CV/adl4cv/data/FaceForensics/original_sequences/youtube/c40/sequences_299x299_5seq@10frames_skip_5_uniform",
-        "/home/anna/Desktop/Uni/WiSe19/DL4CV/adl4cv/data/FaceForensics/manipulated_sequences/Deepfakes/c40/sequences_299x299_5seq@10frames_skip_5_uniform"]
-
-
-    test_dataset = FaceForensicsVideosDataset(d, generate_coupled=False, num_frames=10, calculateOpticalFlow=False, transform=ToTensor())
+    d = ["/home/anna/Desktop/Uni/WiSe19/DL4CV/adl4cv/data/FaceForensics/manipulated_sequences/Deepfakes/c40/sequences_299x299_5seq@10frames_skip_5_uniform"]
+    test_dataset = FaceForensicsVideosDataset(d, generate_coupled=False, num_frames=5, transform=ToTensor())
     print(test_dataset.__len__())
-    train_list, val_list = test_dataset.get_train_val_lists(0.2, 0.8)
+    train_list, val_list = test_dataset.get_train_val_lists(0.9, 0.01)
     print(len(train_list), len(val_list))
     dataset_loader = torch.utils.data.DataLoader(test_dataset,
                                                  batch_size=4, shuffle=True,
                                                  collate_fn=my_collate,  # use custom collate function here
                                                  pin_memory=True)
 
-    train_sampler = SubsetRandomSampler(train_list)
-    valid_sampler = SubsetRandomSampler(val_list)
-
-    train_loader = torch.utils.data.DataLoader(test_dataset, batch_size=2,
-                                               sampler=train_sampler)
-    validation_loader = torch.utils.data.DataLoader(test_dataset, batch_size=2,
-                                                    sampler=valid_sampler)
-
-    # for v in list(validation_loader):
-    #     print(v["label"])
-        
-
+    for i, sample in enumerate(dataset_loader):
+        print("->", sample["image"].shape)
+        print(sample["label"])
+        pass
 
