@@ -1,4 +1,4 @@
-from utils.warp_image_farneback import warp_from_images
+#from utils.warp_image_farneback import warp_from_images
 from skimage import io
 from torch.utils import data
 import torch
@@ -99,7 +99,7 @@ class FaceForensicsVideosDataset(data.Dataset):
             else:
                 label_list.append([key, 0])
                 last_label = not last_label
-
+        label_list[-1][1] += 1
         val_list = []
         train_list = []
         for streak in label_list:
