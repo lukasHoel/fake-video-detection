@@ -9,7 +9,7 @@ from tqdm.auto import tqdm
 
 
 class FaceForensicsVideosDataset(data.Dataset):
-    def __init__(self, directories, num_frames, generate_coupled=False, transform=None, max_number_videos_per_directory=-1, calculateOpticalFlow=True, verbose=False):
+    def __init__(self, directories, num_frames, generate_coupled=False, transform=None, max_number_videos_per_directory=-1, calculateOpticalFlow=True, verbose=False, caching=True):
         """
         Args:
         directories: List of paths where the images for the dataset are
@@ -26,6 +26,7 @@ class FaceForensicsVideosDataset(data.Dataset):
         self.max_number_videos_per_directory = max_number_videos_per_directory
         self.calculateOpticalFlow = calculateOpticalFlow
         self.verbose = verbose
+        self.caching = caching
         self.frame_dir = {}
         counter = 0
         number_directories = 0
@@ -140,7 +141,7 @@ class FaceForensicsVideosDataset(data.Dataset):
         if not is_loaded:
             this_sample = []
             if self.verbose:
-                print("loading new sequence into cache")
+                print("loading new sequence")
                 for name in tqdm(sequence):
                     this_sample.append(io.imread(name))
             else:
@@ -152,7 +153,7 @@ class FaceForensicsVideosDataset(data.Dataset):
                 n = sequence.shape[0]
                 center_image = sequence[n//2]
                 if self.verbose:
-                    print("calculating and loading optical-flow warp into cache")
+                    print("calculating and loading optical-flow warp")
                     for i in tqdm(range(n)):
                         warp.append(warp_from_images(sequence[i], center_image))
                 else:
@@ -160,7 +161,10 @@ class FaceForensicsVideosDataset(data.Dataset):
                         warp.append(warp_from_images(sequence[i], center_image))
                 warp = np.stack(warp)
 
-            self.frame_dir[idx] = (True, sequence, label, warp)
+            if self.caching:
+                if self.verbose:
+                    print("Save calculated results into cache")
+                self.frame_dir[idx] = (True, sequence, label, warp)
 
         # todo why do we need these two lines? in the models, we squeeze the extra dimension everytime?
         samples = np.stack([sequence])

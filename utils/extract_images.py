@@ -11,10 +11,10 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
 DATASET_PATHS = {
-    'original1': 'original_sequences/actors',
-	'original2': 'original_sequences/youtube',
-    'Deepfakes': 'manipulated_sequences/Deepfakes',
-    'Face2Face': 'manipulated_sequences/Face2Face',
+    #'original1': 'original_sequences/actors',
+	#'original2': 'original_sequences/youtube',
+    #'Deepfakes': 'manipulated_sequences/Deepfakes',
+    #'Face2Face': 'manipulated_sequences/Face2Face',
     'FaceSwap': 'manipulated_sequences/FaceSwap',
     'NeuralTextures': 'manipulated_sequences/NeuralTextures'
 }
@@ -78,7 +78,7 @@ def extract_from_directory(data_path, dataset, compression,
 
     # Extract sequences for every video
     for video in tqdm(videos):
-        mask_path = get_mask_path(video, join(data_path, DATASET_PATHS['Face2Face'], 'masks', 'videos'))
+        mask_path = get_mask_path(video, join(data_path, 'manipulated_sequences/Face2Face', 'masks', 'videos'))
         sequences = extract_from_video(join(videos_path, video),
                                        int(num_sequences), int(frames_per_sequence), int(skip_frames),
                                        int(size), int(padding),
