@@ -7,7 +7,6 @@ import numpy as np
 import math
 from tqdm.auto import tqdm
 
-
 class FaceForensicsVideosDataset(data.Dataset):
     def __init__(self, directories, num_frames, generate_coupled=False, transform=None, max_number_videos_per_directory=-1, calculateOpticalFlow=True, verbose=False, caching=True):
         """

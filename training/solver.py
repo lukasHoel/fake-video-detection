@@ -3,6 +3,8 @@ import numpy as np
 import torch
 from torch.autograd import Variable
 from torch.utils.tensorboard import SummaryWriter
+from time import time
+from tqdm.auto import tqdm
 
 def wrap_data(xb, yb, device):
     xb, yb = Variable(xb), Variable(yb)
@@ -87,7 +89,7 @@ class Solver(object):
         with torch.no_grad():
             test_losses = []
             test_accs = []
-            for i, sample in enumerate(test_loader):
+            for i, sample in enumerate(tqdm(test_loader)):
                 loss, test_acc = self.forward_pass(model, sample, device)
                 loss = loss.data.cpu().numpy()
                 test_losses.append(loss)
@@ -130,13 +132,16 @@ class Solver(object):
         model.to(device)
 
         print('START TRAIN on device: {}'.format(device))
+        #start = time()
         for epoch in range(num_epochs):  # for every epoch...
             model.train()  # TRAINING mode (for dropout, batchnorm, etc.)
             train_losses = []
             train_accs = []
-            for i, sample in enumerate(train_loader):  # for every minibatch in training set
+            for i, sample in enumerate(tqdm(train_loader)):  # for every minibatch in training set
                 # FORWARD PASS --> Loss + acc calculation
+                #print("Time until next forward pass (loading from dataloader + backward pass) took: {}".format(time() - start))
                 train_loss, train_acc = self.forward_pass(model, sample, device)
+                #start = time()
 
                 # BACKWARD PASS --> Gradient-Descent update
                 train_loss.backward()
@@ -178,7 +183,7 @@ class Solver(object):
             with torch.no_grad():
                 val_losses = []
                 val_accs = []
-                for i, sample in enumerate(val_loader):
+                for i, sample in enumerate(tqdm(val_loader)):
                     # FORWARD PASS --> Loss + acc calculation
                     val_loss, val_acc = self.forward_pass(model, sample, device)
                     val_loss = val_loss.data.cpu().numpy()

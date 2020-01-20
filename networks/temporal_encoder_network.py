@@ -1,8 +1,8 @@
 from networks.xception import xception
-from utils.warp_image_farneback import warp_from_images
 import torch
 import torch.nn as nn
 import torchvision
+from time import time
 
 class TemporalEncoder(nn.Module):
     """
@@ -45,6 +45,7 @@ class TemporalEncoder(nn.Module):
             for i, param in feature_extractor.named_parameters():
                 param.requires_grad = False
             # Remove fc
+
             removed = list(feature_extractor.children())[:-1]
             feature_extractor = nn.Sequential(
                 *removed,
@@ -117,26 +118,65 @@ class TemporalEncoder(nn.Module):
         sequence_features = [] # features of every self.delta_t*2 + 1 image (and flow) features
         predictions = [] # predictions per sequence_feature
 
-        #print("Start forward pass")
+        #start = time()
         # 1.a for every video frame in sequence x: calculate features with self.feature_extractor
+
+        # images has dimension: (batch x 1 x sequence_length x C x W x H)
+        # Concatenate batch + sequence for fast feature extraction without any for loops! (vectorized impl)
+
+        images = images.squeeze() # remove dim=(1)
+        b, s, c, w, h = images.shape
+        images = images.view(-1, c, w, h)
+        images = self.feature_extractor(images)
+        _, c, w, h = images.shape
+        images = images.view(b, s, c, w, h)
+
+        '''
         for i in range(self.num_input_images):
             x_i = images[:, :, i, :, :, :]
             x_i = x_i.squeeze() # remove dim=(1,2)
             y_i = self.feature_extractor(x_i)
             image_features.append(y_i)
-        #print("Image feature extraction finished")
+        '''
 
         # 1.b if optical flow is enabled: calculate image features of warped image in each sequence
         if self.useOpticalFlow:
+
+            # warp has dimension: (batch x 1 x sequence_length x C x W x H)
+            # Concatenate batch + sequence for fast feature extraction without any for loops! (vectorized impl)
+            warps = warps.squeeze()  # remove dim=(1)
+            b, s, c, w, h = warps.shape
+            warps = warps.view(-1, c, w, h)
+            warps = self.feature_extractor(warps)
+            _, c, w, h = warps.shape
+            warps = warps.view(b, s, c, w, h)
+
+            '''
             for i in range(self.num_input_images):
                 x_i = warps[:, :, i, :, :, :]
                 x_i = x_i.squeeze()  # remove dim=(1,2)
                 y_i = self.feature_extractor(x_i)
                 flow_features.append(y_i)
-            #print("Flow feature extraction finished")
+            '''
+        #print("Feature extraction image + warp took: {}".format(time() - start))
 
+        #start = time()
         # 2. concatenate multiple features (normal + flow) together and run a CNN block on it (self.temporal_encoder)
         for i in range(self.num_sequences):
+
+            if self.useOpticalFlow:
+                img_features = images[:, i:i + self.images_in_sequence // 2, :, :, :]
+                warp_features = warps[:, i:i + self.images_in_sequence // 2, :, :, :]
+                features = torch.cat((img_features, warp_features), 1)
+            else:
+                features = images[:, i:i + self.images_in_sequence, :, :, :]
+
+            b, s, c, w, h = features.shape
+            features = features.view(b, s*c, w, h)
+            y_i = self.temporal_encoder(features)
+            sequence_features.append(y_i)
+
+            '''
             if self.useOpticalFlow:
                 features = tuple(image_features[i:i+self.images_in_sequence//2]+flow_features[i:i+self.images_in_sequence//2])
             else:
@@ -145,8 +185,11 @@ class TemporalEncoder(nn.Module):
             feature_stack = torch.cat(features, 1)
             y_i = self.temporal_encoder(feature_stack)
             sequence_features.append(y_i)
-        #print("Temporal encoding finished")
+            '''
 
+        #print("Temporal encoder took: {}".format(time() - start))
+
+        #start = time()
         # 3. for every temporal_encoder output: run FC layer and do classification
         for i in range(len(sequence_features)):
             batch_size = sequence_features[i].shape[0]
@@ -162,6 +205,6 @@ class TemporalEncoder(nn.Module):
                 # or: learn it!
         predictions_stack = torch.cat(tuple(predictions), 1)
         y = self.overall_classifier(predictions_stack)
-        #print("Forward pass finished")
+        #print("FC layer took: {}".format(time() - start))
 
         return y
