@@ -1,3 +1,9 @@
+'''
+Author: Lukas Hoellein
+
+Test program for mask-extraction via precomputed masks from FaceForensics dataset.
+'''
+
 import argparse
 import cv2
 import os

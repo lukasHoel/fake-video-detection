@@ -1,3 +1,10 @@
+'''
+Author: Lukas Hoellein
+
+Splits a sequence_folder created by the "extract_images" script into train/val/test set according to the official
+FaceForensics train/val/test split found in https://github.com/ondyari/FaceForensics/tree/master/dataset/splits
+'''
+
 import argparse
 import os
 import shutil

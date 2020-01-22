@@ -1,3 +1,14 @@
+'''
+Author: Lukas Hoellein
+
+Assumes equal amount of videos in all dataset directories!!
+    Will move for all datasets including original (only selecting a few datasets is not possible due to ambiguities!)
+
+    For all datasets: Recursively moves a uniform/random sampled subset of directories in 'input/dataset/compression/sequence' to
+    'output/FaceForensics_Testset/dataset/compression/sequence'. The number of directories to be moved can be controlled
+    by the percentage parameter.
+'''
+
 import argparse
 import os
 import shutil

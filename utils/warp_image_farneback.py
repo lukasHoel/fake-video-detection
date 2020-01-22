@@ -1,3 +1,9 @@
+'''
+Author: Lukas Hoellein
+
+Calculates optical-flow and warped images via OpenCV Farneback method.
+'''
+
 import numpy as np
 import sys
 import cv2

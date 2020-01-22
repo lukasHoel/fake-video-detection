@@ -1,3 +1,9 @@
+"""
+Performs training, validation, testing generically for any classification model and calculates loss/accuracy and saves it to tensorboard.
+
+Author: Lukas Hoellein
+"""
+
 import numpy as np
 
 import torch
@@ -32,6 +38,16 @@ class Solver(object):
                  extra_args={},
                  loss_func=torch.nn.CrossEntropyLoss(),
                  log_dir=None):
+        """
+
+        Parameters
+        ----------
+        optim: which optimizer to use, e.g. Adam
+        optim_args: see also default_adam_args: specify here valid dictionary of arguments for chosen optimizer
+        extra_args: extra_args that should be used when logging to tensorboard (e.g. model hyperparameters)
+        loss_func: loss function, e.g. Cross-Entropy-Loss
+        log_dir: where to log to tensorboard
+        """
         optim_args_merged = self.default_adam_args.copy()
         optim_args_merged.update(optim_args)
         self.optim_args = optim_args_merged

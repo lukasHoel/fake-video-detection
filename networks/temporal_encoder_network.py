@@ -1,3 +1,9 @@
+"""
+Feature Extraction --> Temporal Encoding of multiple features in one sequence and optional with warp-input --> Fully connected binary classification
+
+Author: Lukas Hoellein
+"""
+
 from networks.xception import xception
 import torch
 import torch.nn as nn
@@ -6,14 +12,29 @@ from time import time
 
 class TemporalEncoder(nn.Module):
     """
-    Simple transfer learning model that takes an imagenet pretrained model with
-    a fc layer as base model and retrains a new fc layer for num_out_classes
+    Feature Extraction --> Temporal Encoding of multiple features in one sequence and optional with warp-input --> Fully connected binary classification
 
-    Adapted slightly from FaceForensics version: https://github.com/ondyari/FaceForensics/blob/master/classification/network/models.py
+    Author: Lukas Hoellein
     """
     def __init__(self, num_input_images, delta_t=2, feature_dimension=64, temporal_encoder_depth=5,
                  model_choice='xception', num_out_classes=2, dropout=0.0,
                  useOpticalFlow=True):
+        """
+        Feature Extraction --> Temporal Encoding of multiple features in one sequence and optional with warp-input --> Fully connected binary classification
+
+        Author: Lukas Hoellein
+
+        Parameters
+        ----------
+        num_input_images: how many images are in one sequence
+        delta_t: how many images to choose before and after the current image for grouping in the temporal encoder
+        feature_dimension: how many features to extract per image
+        temporal_encoder_depth: how many iterations of the temporal encoder CNN should we do
+        model_choice: which pretrained model to use for feature extraction
+        num_out_classes: e.g. binary classification
+        dropout: how much to use
+        useOpticalFlow: True/False: use as additional input or not
+        """
         super(TemporalEncoder, self).__init__()
         self.model_choice = model_choice
         self.dropout = dropout
@@ -113,8 +134,6 @@ class TemporalEncoder(nn.Module):
         else:
             images = x
 
-        image_features = [] # image features of every video frame in x independently
-        flow_features = [] # if optical flow shall be calculated: save it's image features from warped image in this list
         sequence_features = [] # features of every self.delta_t*2 + 1 image (and flow) features
         predictions = [] # predictions per sequence_feature
 
@@ -131,14 +150,6 @@ class TemporalEncoder(nn.Module):
         _, c, w, h = images.shape
         images = images.view(b, s, c, w, h)
 
-        '''
-        for i in range(self.num_input_images):
-            x_i = images[:, :, i, :, :, :]
-            x_i = x_i.squeeze() # remove dim=(1,2)
-            y_i = self.feature_extractor(x_i)
-            image_features.append(y_i)
-        '''
-
         # 1.b if optical flow is enabled: calculate image features of warped image in each sequence
         if self.useOpticalFlow:
 
@@ -150,14 +161,6 @@ class TemporalEncoder(nn.Module):
             warps = self.feature_extractor(warps)
             _, c, w, h = warps.shape
             warps = warps.view(b, s, c, w, h)
-
-            '''
-            for i in range(self.num_input_images):
-                x_i = warps[:, :, i, :, :, :]
-                x_i = x_i.squeeze()  # remove dim=(1,2)
-                y_i = self.feature_extractor(x_i)
-                flow_features.append(y_i)
-            '''
         #print("Feature extraction image + warp took: {}".format(time() - start))
 
         #start = time()
@@ -175,18 +178,6 @@ class TemporalEncoder(nn.Module):
             features = features.view(b, s*c, w, h)
             y_i = self.temporal_encoder(features)
             sequence_features.append(y_i)
-
-            '''
-            if self.useOpticalFlow:
-                features = tuple(image_features[i:i+self.images_in_sequence//2]+flow_features[i:i+self.images_in_sequence//2])
-            else:
-                features = tuple(image_features[i:i+self.images_in_sequence])
-
-            feature_stack = torch.cat(features, 1)
-            y_i = self.temporal_encoder(feature_stack)
-            sequence_features.append(y_i)
-            '''
-
         #print("Temporal encoder took: {}".format(time() - start))
 
         #start = time()

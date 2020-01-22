@@ -1,3 +1,7 @@
+"""
+Authors: Anna Mittermair and Lukas Hoellein
+"""
+
 from utils.warp_image_farneback import warp_from_images
 from skimage import io
 from torch.utils import data
@@ -15,6 +19,11 @@ class FaceForensicsVideosDataset(data.Dataset):
             Example path: "... /manipulated_sequences/Face2Face/c40/sequences.
             In this directory, there needs to be a folder /sequences containing folders of sequences with the png images which will be used.
         generate_coupled: Groups all sequences of fakes made from the same original and the original together in one group of samples that can be retrieved at once.
+
+        max_number_videos_per_directory: after how many videos to stop searching, e.g. useful if directory contains 1000 videos, but only want to train on the first 100.
+        verbose: whether or not to print when a new image is loaded (and opt-flow is calculated)
+        calculateOpticalFlow: Whether or not to calculate it when loading an image
+        caching: If set to true, will save the image (and warp) in a dictionary on RAM when first requesting an item. This can speed up the second epoch of training at the cost of high RAM memory consumption.
         """
         self.transform = transform
         self.generate_coupled = generate_coupled

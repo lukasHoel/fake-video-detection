@@ -1,3 +1,9 @@
+"""
+Author: Lukas Hoellein
+
+Adapted slightly from FaceForensics version: https://github.com/ondyari/FaceForensics/blob/master/classification/network/models.py
+"""
+
 from networks.xception import xception
 import torch.nn as nn
 import torchvision

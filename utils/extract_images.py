@@ -1,3 +1,31 @@
+'''
+Author: Lukas Hoellein
+
+Extracts sequences from all videos in <data_path>/<dataset>/<compression>/videos into <data_path>/<dataset>/<compression>/sequences.
+    Will use the FaceForensics file structure to identify all videos of dataset type specified.
+    A sequence is a number of face-cropped images starting from a random/uniform frame number inside of the video with configurable number of
+    frames to skip between two images.
+    Videos will be saved in a subdirectory structure as follows:
+    <root_of_dataset>
+        <root_of_dataset>/videos
+            <here lie all videos to extract from, e.g. foo.mp4, bar.mp4>
+        <root_of_dataset>/sequences
+            <foo>: subdirectory with the name of the original video (without datatype suffix e.g. without .mp4)
+                <0>: number of sequence
+                    0000.png: first picture in this sequence
+                    0001.png: second picture in this sequence
+                <1>
+                    0000.png
+                    0001.png
+            <bar>
+                <0>
+                    0000.png
+                    0001.png
+                <1>
+                    0000.png
+                    0001.png
+'''
+
 import argparse
 import cv2
 import os
