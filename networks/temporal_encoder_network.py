@@ -143,7 +143,7 @@ class TemporalEncoder(nn.Module):
         # images has dimension: (batch x 1 x sequence_length x C x W x H)
         # Concatenate batch + sequence for fast feature extraction without any for loops! (vectorized impl)
 
-        images = images.squeeze() # remove dim=(1)
+        images = images.squeeze(dim=1) # remove dim=(1)
         b, s, c, w, h = images.shape
         images = images.view(-1, c, w, h)
         images = self.feature_extractor(images)
@@ -155,7 +155,7 @@ class TemporalEncoder(nn.Module):
 
             # warp has dimension: (batch x 1 x sequence_length x C x W x H)
             # Concatenate batch + sequence for fast feature extraction without any for loops! (vectorized impl)
-            warps = warps.squeeze()  # remove dim=(1)
+            warps = warps.squeeze(dim=1)  # remove dim=(1)
             b, s, c, w, h = warps.shape
             warps = warps.view(-1, c, w, h)
             warps = self.feature_extractor(warps)
