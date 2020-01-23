@@ -1,7 +1,7 @@
 Contains all runs for the specific model as tensorboard files.
 To view the runs, simply start tensorboard via:
 
-`tensorboard --logidr path/to/runs`
+`tensorboard --logdir path/to/runs`
 
 ###Naming conventions:
 
