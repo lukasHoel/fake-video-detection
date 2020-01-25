@@ -112,7 +112,7 @@ class ToTensor(object):
         # numpy image: H x W x C
         # torch image: C X H X W
         image = torch.from_numpy(image.transpose((2, 0, 1)))
-        return {'image'     : image.float(),
+        return {'image'     : image.float() / 255.0,
                 'label'     : torch.tensor(label).long()}
 
 if __name__ == '__main__':

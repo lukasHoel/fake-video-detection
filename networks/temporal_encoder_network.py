@@ -145,6 +145,7 @@ class TemporalEncoder(nn.Module):
 
         images = images.squeeze(dim=1) # remove dim=(1)
         b, s, c, w, h = images.shape
+
         images = images.view(-1, c, w, h)
         images = self.feature_extractor(images)
         _, c, w, h = images.shape
@@ -152,7 +153,7 @@ class TemporalEncoder(nn.Module):
 
         # 1.b if optical flow is enabled: calculate image features of warped image in each sequence
         if self.useOpticalFlow:
-
+			
             # warp has dimension: (batch x 1 x sequence_length x C x W x H)
             # Concatenate batch + sequence for fast feature extraction without any for loops! (vectorized impl)
             warps = warps.squeeze(dim=1)  # remove dim=(1)

@@ -3,7 +3,7 @@ Authors: Anna Mittermair and Lukas Hoellein
 """
 
 from utils.warp_image_farneback import warp_from_images
-from skimage import io
+from skimage import io, img_as_float
 from torch.utils import data
 import torch
 import os
@@ -198,15 +198,14 @@ class ToTensor(object):
         samples = torch.from_numpy(samples.transpose((0, 1, 4, 2, 3)))
         labels = torch.tensor(labels)
 
-        result = {"image": samples.float(),
+        result = {"image": samples.float() / 255.0,
                   "label": labels.long()}
 
         if warps is not None and None not in warps:
             warps = torch.from_numpy(warps.transpose((0, 1, 4, 2, 3)))
-            result["warp"] = warps.float()
+            result["warp"] = warps.float() / 255.0
 
         return result
-
 
 def my_collate(batch):
     data = np.concatenate([b["image"] for b in batch], axis=0)
@@ -219,10 +218,10 @@ def my_collate(batch):
 if __name__ == '__main__':
     # test /example
     d = [
-        "C:/Users/admin/Google Drive/FaceForensics_Sequences/original_sequences/youtube/c40/sequences_299x299_5seq@10frames_skip_5_uniform",
-        "C:/Users/admin/Google Drive/FaceForensics_Sequences/manipulated_sequences/Deepfakes/c40/sequences_299x299_5seq@10frames_skip_5_uniform"]
+        "F:/Google Drive/FaceForensics_large/original_sequences/youtube/c40/sequences_299x299_10seq@10frames_skip_5_uniform/train",
+        "F:/Google Drive\FaceForensics_large/manipulated_sequences/Deepfakes/c40/sequences_299x299_10seq@10frames_skip_5_uniform/train"]
     test_dataset = FaceForensicsVideosDataset(d, generate_coupled=False, num_frames=10, transform=ToTensor(),
-                                              max_number_videos_per_directory=4)
+                                              max_number_videos_per_directory=4, verbose=False)
     print(test_dataset.__len__())
     train_list, val_list = test_dataset.get_train_val_lists(0.8, 0.2)
     print(len(train_list), len(val_list))
@@ -240,6 +239,8 @@ if __name__ == '__main__':
     validation_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1,
                                                     sampler=valid_sampler,
                                                     num_workers=1)
+
+    '''
     sum_0 = 0
     sum_1 = 0
     for v in list(validation_loader):
@@ -261,6 +262,16 @@ if __name__ == '__main__':
             sum_1 += 1
 
     print("train loader has {} zeros and {} ones out of total {}".format(sum_0, sum_1, len(train_loader)))
+    '''
+
+    for sample in train_loader:
+        xb = sample["image"]
+        print(xb.shape)
+        for idx in range(xb.shape[2]):
+            import matplotlib.pyplot as plt
+
+            plt.imshow(xb[0][0][idx].cpu().numpy().transpose((1,2,0)))
+            plt.show()
 
     '''
     dataset_loader = torch.utils.data.DataLoader(test_dataset,
