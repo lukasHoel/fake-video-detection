@@ -3,13 +3,14 @@ Authors: Anna Mittermair and Lukas Hoellein
 """
 
 from utils.warp_image_farneback import warp_from_images
-from skimage import io, img_as_float
+from skimage import io
 from torch.utils import data
 import torch
 import os
 import numpy as np
 import math
 from tqdm.auto import tqdm
+from torchvision import transforms
 
 class FaceForensicsVideosDataset(data.Dataset):
     def __init__(self, directories, num_frames, generate_coupled=False, transform=None, max_number_videos_per_directory=-1, calculateOpticalFlow=True, verbose=False, caching=True):
@@ -189,21 +190,34 @@ class FaceForensicsVideosDataset(data.Dataset):
 class ToTensor(object):
     """Convert ndarrays in sample to Tensors."""
 
+    def __init__(self):
+        # normalize similar to FaceForensics paper: https://github.com/ondyari/FaceForensics/blob/master/classification/dataset/transform.py
+        self.normalize = transforms.Normalize([0.5] * 3, [0.5] * 3)
+
     def __call__(self, sample):
         samples, labels, warps = sample["image"], sample["label"], sample["warp"]
 
         # swap color axis because
         # numpy image: num_frames x H x W x C
         # torch image: num_frames x C X H X W
-        samples = torch.from_numpy(samples.transpose((0, 1, 4, 2, 3)))
-        labels = torch.tensor(labels)
+        samples = torch.from_numpy(samples.transpose((0, 1, 4, 2, 3))).float() / 255.0
 
-        result = {"image": samples.float() / 255.0,
-                  "label": labels.long()}
+        # normalize
+        for b in range(samples.shape[0]):
+            for s in range(samples.shape[1]):
+                samples[b][s] = self.normalize(samples[b][s])
+
+        labels = torch.tensor(labels).long()
+
+        result = {"image": samples,
+                  "label": labels}
 
         if warps is not None and None not in warps:
-            warps = torch.from_numpy(warps.transpose((0, 1, 4, 2, 3)))
-            result["warp"] = warps.float() / 255.0
+            warps = torch.from_numpy(warps.transpose((0, 1, 4, 2, 3))).float() / 255.0
+            for b in range(warps.shape[0]):
+                for s in range(warps.shape[1]):
+                    warps[b][s] = self.normalize(warps[b][s])
+            result["warp"] = warps
 
         return result
 

@@ -146,7 +146,6 @@ class TemporalEncoder(nn.Module):
         images = images.squeeze(dim=1) # remove dim=(1)
         b, s, c, w, h = images.shape
         images = images.view(-1, c, w, h)
-
         images = self.feature_extractor(images)
         _, c, w, h = images.shape
         images = images.view(b, s, c, w, h)
