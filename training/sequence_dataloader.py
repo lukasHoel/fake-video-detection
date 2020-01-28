@@ -67,8 +67,9 @@ class FaceForensicsVideosDataset(data.Dataset):
                 number_sequences_for_video = 0
                 for s in sequence_folders:
                     if self.max_number_sequences_per_video >= 0 and number_sequences_for_video >= self.max_number_sequences_per_video:
-                        print("Reached maximum number of sequences per video ({}), will skip the rest.".format(
-                            number_sequences_for_video))
+                        if self.verbose:
+                            print("Reached maximum number of sequences per video ({}), will skip the rest.".format(
+                                number_sequences_for_video))
                         break
                     number_sequences_for_video += 1
 
