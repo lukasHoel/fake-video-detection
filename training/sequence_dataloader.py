@@ -13,7 +13,7 @@ from tqdm.auto import tqdm
 from torchvision import transforms
 
 class FaceForensicsVideosDataset(data.Dataset):
-    def __init__(self, directories, num_frames, generate_coupled=False, transform=None, max_number_videos_per_directory=-1, calculateOpticalFlow=True, verbose=False, caching=True):
+    def __init__(self, directories, num_frames, generate_coupled=False, transform=None, max_number_videos_per_directory=-1, max_number_sequences_per_video=-1, calculateOpticalFlow=True, verbose=False, caching=True):
         """
         Args:
         directories: List of paths where the images for the dataset are
@@ -22,6 +22,7 @@ class FaceForensicsVideosDataset(data.Dataset):
         generate_coupled: Groups all sequences of fakes made from the same original and the original together in one group of samples that can be retrieved at once.
 
         max_number_videos_per_directory: after how many videos to stop searching, e.g. useful if directory contains 1000 videos, but only want to train on the first 100.
+        max_number_sequences_per_video: after how many sequences to stop searching, e.g. useful if video is split in 10 sequences, but we only want to train on the first 2.
         verbose: whether or not to print when a new image is loaded (and opt-flow is calculated)
         calculateOpticalFlow: Whether or not to calculate it when loading an image
         caching: If set to true, will save the image (and warp) in a dictionary on RAM when first requesting an item. This can speed up the second epoch of training at the cost of high RAM memory consumption.
@@ -33,6 +34,7 @@ class FaceForensicsVideosDataset(data.Dataset):
         self.num_videos = 0
         self.num_frames=num_frames
         self.max_number_videos_per_directory = max_number_videos_per_directory
+        self.max_number_sequences_per_video = max_number_sequences_per_video
         self.calculateOpticalFlow = calculateOpticalFlow
         self.verbose = verbose
         self.caching = caching
@@ -62,7 +64,14 @@ class FaceForensicsVideosDataset(data.Dataset):
                 # Iterate through all sequences
                 sequence_folders = [os.path.join(path, f, x) for x in os.listdir(os.path.join(path, f)) if
                                     not os.path.isfile(os.path.join(path, f, x))]
+                number_sequences_for_video = 0
                 for s in sequence_folders:
+                    if self.max_number_sequences_per_video >= 0 and number_sequences_for_video >= self.max_number_sequences_per_video:
+                        print("Reached maximum number of sequences per video ({}), will skip the rest.".format(
+                            number_sequences_for_video))
+                        break
+                    number_sequences_for_video += 1
+
                     # Discard empty sample folders
                     n = len([x for x in os.listdir(s) if os.path.isfile(os.path.join(s, x)) and x.endswith(".png")])
                     if n < self.num_frames:
