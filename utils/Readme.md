@@ -1,6 +1,10 @@
-Author: Lukas Hoellein
+# Utils
+With the scripts contained here, you can create your own dataset from the official FaceForensics dataset. It will create sequences of images and can be configured as described below. <br><br>
+Additionally, this directory contains functions to create optical flow from images and contains preliminary testing results from using flownet2 as optical flow iimplementation.
 
-Usage of testset extraction (official splits):
+## Author: Lukas Hoellein
+
+### Usage of testset extraction (official splits):
 
     python create_splits.py -i "F:/Google Drive/FaceForensics_large"
                             -s sequences_299x299_10seq@10frames_skip_5_uniform
@@ -13,7 +17,7 @@ Usage of testset extraction (official splits):
     FaceForensics train/val/test split found in https://github.com/ondyari/FaceForensics/tree/master/dataset/splits
 
 
-Usage of testset extraction (uniform split for less than 1000 videos):
+### Usage of testset extraction (uniform split for less than 1000 videos):
 
 	python create_testset.py -i C:\Users\admin\Desktop\FaceForensics
 							 -o C:\Users\admin\Desktop\
@@ -43,7 +47,7 @@ Usage of testset extraction (uniform split for less than 1000 videos):
     :param sample_mode: how to extract (e.g. uniform: every i-th, random)
 							 
 							 
-Usage of new image extraction (with Face Cropping):
+### Usage of sequence generation (with Face Cropping):
 
     requires installation of opencv (>3.x) and opencv-utils, e.g. pip install opencv-python, pip install opencv-utils
 
@@ -94,7 +98,7 @@ Usage of new image extraction (with Face Cropping):
                         Uniform means deterministic selection of frame-numbers and random means random selection of frame-numbers
                         for the first frame in a sequence.
 
-Usage of old image extraction (from FaceForensics Github):
+### Usage of old image extraction (from FaceForensics Github):
     python extract_compressed_videos.py --data_path path/to/FaceForensics/ --dataset {FaceSwap, Deepfakes, Face2Face, original1, original2} --compression {c0, c23, c40}
     
     This will extract images of the specified dataset in the specified compression.
@@ -104,7 +108,7 @@ Usage of old image extraction (from FaceForensics Github):
     
     This program requires opencv installation, e.g. with conda install opencv
     
-Usage of downsampling:
+### Usage of downsampling:
     ./downsample.sh <base-path> e.g. ./downsample.sh manipulated_sequences/Deepfakes/c40/images/
     
     base-path shall be the directory in which the different videos/images lie, e.g.
