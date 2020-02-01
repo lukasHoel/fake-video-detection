@@ -1,5 +1,5 @@
 """
-Feature Extraction --> Temporal Encoding of multiple features in one sequence and optional with warp-input --> Fully connected binary classification
+Architecture of the temporal encoder network:  feature extraction for every image frame independently followed by concatenation of multiple image features in a temporal encoder block before binary classification. The temporal encoder block concatenates an amount delta_t of image features and forwards them through n CNN blocks (same convolution, ReLU, batchnorm). This is done multiple times with the same layers until all input images from one sequence are processed.  Finally, we combine everything with fully-connected layers.
 
 Author: Lukas Hoellein
 """
@@ -12,7 +12,7 @@ from time import time
 
 class TemporalEncoder(nn.Module):
     """
-    Feature Extraction --> Temporal Encoding of multiple features in one sequence and optional with warp-input --> Fully connected binary classification
+    Architecture of the temporal encoder network:  feature extraction for every image frame independently followed by concatenation of multiple image features in a temporal encoder block before binary classification. The temporal encoder block concatenates an amount delta_t of image features and forwards them through n CNN blocks (same convolution, ReLU, batchnorm). This is done multiple times with the same layers until all input images from one sequence are processed.  Finally, we combine everything with fully-connected layers.
 
     Author: Lukas Hoellein
     """
@@ -20,7 +20,7 @@ class TemporalEncoder(nn.Module):
                  model_choice='xception', num_out_classes=2, dropout=0.0,
                  useOpticalFlow=True):
         """
-        Feature Extraction --> Temporal Encoding of multiple features in one sequence and optional with warp-input --> Fully connected binary classification
+        Architecture of the temporal encoder network:  feature extraction for every image frame independently followed by concatenation of multiple image features in a temporal encoder block before binary classification. The temporal encoder block concatenates an amount delta_t of image features and forwards them through n CNN blocks (same convolution, ReLU, batchnorm). This is done multiple times with the same layers until all input images from one sequence are processed.  Finally, we combine everything with fully-connected layers.
 
         Author: Lukas Hoellein
 
