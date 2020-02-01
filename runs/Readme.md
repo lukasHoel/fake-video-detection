@@ -14,7 +14,7 @@ Each run has a unique identifier as folder name. This identifier can also be use
 # Matching of run-id's to numbers in the report
 Here we provide a list, which runs contain results that are mentioned in our report. Other runs not mentioned in this list were done by us e.g. for hyperparameter tuning, debugging, etc. but are still left in the repository for future reference. Sometimes, we mention multiple run-id's per method, this is because we had to restart the jupyter notebook before doing testing sometimes.
 
-## Tables 1 and 2 in report
+## Tables 1 and 2 in report (runs by Lukas)
 Here we list run-id's for training of the baseline and temporal encoder (with and without warp).
 The models were trained on one single fake method + original videos with the configuration: 100 videos, 5 sequences, 10 frames, skip rate 5.
 
@@ -36,7 +36,7 @@ The models were trained on one single fake method + original videos with the con
 - Baseline: `2020-Jan-26_19-43-44_29c5b56a-4074-11ea-b304-0242ac1c0002`
 - Temporal Encoder: `2020-Jan-26_20-48-58_464da536-407d-11ea-9db4-0242ac1c0002`
 
-## Training on all fake methods simultaneously and training on 1000 videos
+## Training on all fake methods simultaneously and training on 1000 videos (runs by Lukas)
 In the ablation studies, we mentioned this kind of training. We made the following training runs for it.
 
 #### Deepfake with 1000 videos, locally (small batch-size)
@@ -51,7 +51,7 @@ In the ablation studies, we mentioned this kind of training. We made the followi
 - Baseline: `2020-Jan-22_19-00-31_7624792e-3d49-11ea-a860-0242ac1c0002`and `2020-Jan-25_09-18-51_b3c8b0fe-3f53-11ea-97cc-0242ac1c0002`
 - Temporal Encoder: `2020-Jan-21_19-11-12_ca36a744-3c81-11ea-9e95-0242ac1c0002` and `2020-Jan-25_14-57-03_f25deff8-3f82-11ea-b5d8-0242ac1c0002`
 
-## Hyperparameter tuning from Table 3
+## Hyperparameter tuning from Table 3 (runs by Lukas)
 Here we show the results of testing different values of the delta_t parameter and for the skip rate. We tested it on the temporal encoder model. The model was trained on one single fake method (deepfake) + original videos with the configuration: 100 videos, 5 sequences, 10 frames, skip rate 5. The different hyperparameters can be found in the `HPARAMS` tab in tensorboard. All runs for the hyperparameter tuning are listed below.
 
 - `2020-Jan-02_13_50_54_e556662e-2d66-11ea-b9de-0242ac1c0002`
