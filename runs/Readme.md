@@ -10,9 +10,9 @@ To view the runs, simply start tensorboard via:
 - <b>TemporalEncoderII (trained by Lukas):</b> results from the model `networks/temporal_encoder_network.py` either with our without warp
 - <b>TE small (trained by Anna):</b> results from the model `networks/temporal_encoder_small.py` and `networks/warp_model_small.py`
 - <b>Optical Flow (trained by Anna):</b> results from several optical flow models in the following subdirectries
-    - Names containing <b>just\_of:</b> model network\_just\_of
-    - Names containing <b>of\_fc\_config\_tests:</b> model network\_of\_fc
-    - Names containing <b>of\_conv:</b> modelnetwork\_of\_conv
+    - Names containing <b>just\_of:</b> model `networks/network\_just\_of`
+    - Names containing <b>of\_fc\_config\_tests:</b> model `networks/network\_of\_fc`
+    - Names containing <b>of\_conv:</b> model `networks/network\_of\_conv`
 
 Each run has a unique identifier as folder name. This identifier can also be used to load the corresponding model, if it was saved in `saved_results/models`.
 
