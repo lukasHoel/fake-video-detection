@@ -8,7 +8,7 @@
 
 Existing  approaches  for  face  forgery  detection  test  a video frame-by-frame without using (temporal) connections between  the  frames.    This  makes  it  particularly  hard  to detect forgery when the videos are of low resolution (e.g. highly  compressed).    We  propose  a  new  way  to  sample the videos and incorporate them into networks that make use of the temporal context between frames.  We also propose architectures that make use of the optical flow between frames.  Our approaches improved the detection accuracy across the bench.
 
-## Directory structure of this project:
+## Directory structure of this project
 
 - `networks:` Contains all networks that we used for this project.
 - `notebooks:` Contains the (very flexible, configurable) jupyter notebooks that we used for training/validation/testing. See Readme there for additional information.
