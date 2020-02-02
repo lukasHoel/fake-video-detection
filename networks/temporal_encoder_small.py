@@ -24,6 +24,12 @@ class ConcatBaselineModel(nn.Module):
     """
 
     def __init__(self, model_choice='xception', num_frames=5, drop_blocks=8, image_shape=299):
+        """
+        Parameters:
+            num_frames: number of frames to be used as the network input
+            drop_blocks: how many blocks from the feature extraction networks will not be used for feature extraction /
+                = stop after (16 - num_blocks) feature extraction blocks
+        """
         super(ConcatBaselineModel, self).__init__()
         self.num_frames = num_frames
         self.model_choice = model_choice
