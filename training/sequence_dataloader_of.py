@@ -15,8 +15,12 @@ from tqdm.auto import tqdm
 
 
 class FaceForensicsVideosDataset(data.Dataset):
+    """
+    Variant of the Dataloader for loading sequences that gives more options for calculation of optical flow.
+    """
     def __init__(self, directories, num_frames, generate_coupled=False, transform=None, max_number_videos_per_directory=-1, calculateOpticalFlow=True, verbose=False, flow_representation="x y angle", flow_pair="next"):
-         Args:
+        """
+        Args:
         directories: List of paths where the images for the dataset are
             Example path: "... /manipulated_sequences/Face2Face/c40/sequences.
             In this directory, there needs to be a folder /sequences containing folders of sequences with the png images which will be used.
