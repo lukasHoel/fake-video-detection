@@ -10,12 +10,12 @@ Existing  approaches  for  face  forgery  detection  test  a video frame-by-fram
 
 ## Directory structure of this project:
 
-- `networks:` contains all networks that we used for this project
-- `notebooks:` contains the (very flexible, configurable) jupyter notebooks that we used for training/validation/testing. See Readme there for additional information.
-- `runs:` contains saved results from our training/validation/test runs as tensorboard files. See Readme there for additional information.
-- `saved_results:` contains saved models from our training/validation/test runs as .pt files. See Readme there for additional information
-- `training:` contains our dataloaders and our solver used for training/validation/testing.
-- `utils:` contains several utility python scripts, e.g. for dataset generation, optical flow calculation, documentation of commands, ...
+- `networks:` Contains all networks that we used for this project.
+- `notebooks:` Contains the (very flexible, configurable) jupyter notebooks that we used for training/validation/testing. See Readme there for additional information.
+- `runs:` Contains saved results from our training/validation/test runs as tensorboard files. See Readme there for additional information.
+- `saved_results:` Contains saved models from our training/validation/test runs as .pt files. See Readme there for additional information.
+- `training:` Contains our dataloaders and our solver used for training/validation/testing.
+- `utils:` Contains several utility python scripts, e.g. for dataset generation, optical flow calculation, documentation of commands, ...
 
 ## Existing Results (from our report and others)
 
