@@ -1,3 +1,8 @@
+"""
+Author: Anna Mittermair
+"""
+
+
 from networks.xception import xception
 import torch.nn.functional as F
 import torch.nn as nn
