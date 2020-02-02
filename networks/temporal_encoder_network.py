@@ -1,6 +1,8 @@
 """
 Architecture of the temporal encoder network:  feature extraction for every image frame independently followed by concatenation of multiple image features in a temporal encoder block before binary classification. The temporal encoder block concatenates an amount delta_t of image features and forwards them through n CNN blocks (same convolution, ReLU, batchnorm). This is done multiple times with the same layers until all input images from one sequence are processed.  Finally, we combine everything with fully-connected layers.
 
+The network can be configured to use additional warping inputs in sequences via the 'useOpticalFlow' param.
+
 Author: Lukas Hoellein
 """
 
@@ -14,6 +16,8 @@ class TemporalEncoder(nn.Module):
     """
     Architecture of the temporal encoder network:  feature extraction for every image frame independently followed by concatenation of multiple image features in a temporal encoder block before binary classification. The temporal encoder block concatenates an amount delta_t of image features and forwards them through n CNN blocks (same convolution, ReLU, batchnorm). This is done multiple times with the same layers until all input images from one sequence are processed.  Finally, we combine everything with fully-connected layers.
 
+    The network can be configured to use additional warping inputs in sequences via the 'useOpticalFlow' param.
+
     Author: Lukas Hoellein
     """
     def __init__(self, num_input_images, delta_t=2, feature_dimension=64, temporal_encoder_depth=5,
@@ -21,6 +25,8 @@ class TemporalEncoder(nn.Module):
                  useOpticalFlow=True):
         """
         Architecture of the temporal encoder network:  feature extraction for every image frame independently followed by concatenation of multiple image features in a temporal encoder block before binary classification. The temporal encoder block concatenates an amount delta_t of image features and forwards them through n CNN blocks (same convolution, ReLU, batchnorm). This is done multiple times with the same layers until all input images from one sequence are processed.  Finally, we combine everything with fully-connected layers.
+
+        The network can be configured to use additional warping inputs in sequences via the 'useOpticalFlow' param.
 
         Author: Lukas Hoellein
 
@@ -33,7 +39,7 @@ class TemporalEncoder(nn.Module):
         model_choice: which pretrained model to use for feature extraction
         num_out_classes: e.g. binary classification
         dropout: how much to use
-        useOpticalFlow: True/False: use as additional input or not
+        useOpticalFlow: True/False: use as additional input or not (here optical flow actually means warped images, see report)
         """
         super(TemporalEncoder, self).__init__()
         self.model_choice = model_choice
