@@ -4,7 +4,7 @@ Contains all saved models for the specific runs found in `runs` directory.
 
 - <b>Baseline (trained by Lukas):</b> `baseline_<id>.pt`
 - <b>TemporalEncoderII (trained by Lukas):</b> `temporal_encoder_2_<id>.pt`
-- <b>Optical Flow (trained by Lukas):</b> `optical_flow_model<id>.pt`
+- <b>Optical Flow (trained by Anna):</b> `optical_flow_model<id>.pt`
 
 Each model has a unique identifier as suffix. That identifier is the same that is used in the `runs` directory.
 
