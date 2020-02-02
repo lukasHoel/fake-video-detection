@@ -20,6 +20,7 @@ class OFModel(nn.Module):
         Branch 1: Concatenate frame features along a new dimension, downsample channels, then use several CNN layers.
         Branch 2: Concatenate flow features along a new dimension, downsample channels, then use several CNN layers.
     Stage 3: Joint Classification (FC) layer
+    Concatenate branch outputs in channeld dimension + classify. 
     
     
     Feature extraction blocks taken from networks/baseline.py 
