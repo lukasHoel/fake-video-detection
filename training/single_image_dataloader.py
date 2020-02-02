@@ -49,9 +49,8 @@ class FaceForensicsImagesDataset(data.Dataset):
                         self.frame_dir[key] = (i, actor, original)
         self.dataset_length = counter
 
-        # input: part of cases which should be train and validation set, e.g. 0.8, 0.2
-        # returns two lists of indices, one for training and one for test cases
-
+    # input: part of cases which should be train and validation set, e.g. 0.8, 0.2
+    # returns two lists of indices, one for training and one for test cases
     def get_train_val_lists(self, part_train, part_val):
         label_list = [[0, 0]]
         last_label = (self.frame_dir[0][1] == -1)
