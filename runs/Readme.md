@@ -76,8 +76,8 @@ The runs corresponding to results in the table comparing different frame pairing
 ## Results for Optical Flow Representation not contained in the report (runs by Anna)
 Comparisons for different representation of the Optical Flow using the components (x, y, magnitude, angle) can be found in directory `OpticalFlow/of_conv_compare_components`.
 
-## Results not contained in the report but in past presentations (runs by Anna)
-Some results from past presentations can be found in directory `TE_small`.
+## Results not contained in the report but in past presentations (runs by Anna & Lukas)
+Some results from past presentations can be found in directory `TE_small`. Some results in all directories that are not mentioned in the list above are results that we used for training, debugging, etc. and are included in the repository for future reference nonetheless.
 
 
 
