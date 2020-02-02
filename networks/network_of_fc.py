@@ -11,7 +11,7 @@ import numpy as np
 
 
 class OFModel(nn.Module):
-        """
+    """
     Branched three stage model (Similar to the Two-Stream 3D-ConvNet architecture in https://arxiv.org/pdf/1705.07750.pdf.
     Stage 1: 
         Branch 1: Feature extraction on every frame using pretrained feature extraction networks.
@@ -20,13 +20,11 @@ class OFModel(nn.Module):
         Branch 1: Concatenate frame features along a new dimension, downsample channels, then use several CNN layers.
         Branch 2: Concatenate flow features along a new dimension, downsample channels, then use several CNN layers.
     Stage 3: Joint Classification (FC) layer
-    Concatenate branch outputs in channeld dimension + classify. 
+    Concatenate branch outputs in channel dimension + classify. 
     
     
     Feature extraction blocks taken from networks/baseline.py 
         --> (Adapted slightly from FaceForensics version: https://github.com/ondyari/FaceForensics/blob/master/classification/network/models.py)
-
-    Very similar to temporal_encode_small, but using warp instead
     """
 
     def __init__(self, model_choice='xception', num_frames=5, drop_blocks=8, image_shape=299):
