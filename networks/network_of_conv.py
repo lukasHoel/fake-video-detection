@@ -186,6 +186,6 @@ class OFModel(nn.Module):
 
 
 if __name__ == '__main__':
-    model = OFModel(model_choice='xception', num_freatures=5, dropout=0.0)
+    model = OFModel()
     model.train_only_last_layer()
     print(model)

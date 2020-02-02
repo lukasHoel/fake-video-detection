@@ -126,6 +126,6 @@ class ConcatBaselineModel(nn.Module):
 
 
 if __name__ == '__main__':
-    baseline = ConcatBaselineModel(model_choice='xception', num_freatures=5, dropout=0.0)
-    baseline.train_only_last_layer()
-    print(baseline)
+    model = ConcatBaselineModel()
+    model.train_only_last_layer()
+    print(model)

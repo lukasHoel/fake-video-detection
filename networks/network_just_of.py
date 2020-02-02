@@ -140,6 +140,6 @@ class Just_OF_Model(nn.Module):
 
 
 if __name__ == '__main__':
-    of_model = Just_OF_Model(model_choice='xception', num_frames=5, dropout=0.0)
+    of_model = Just_OF_Model()
     of_model.train_only_last_layer()
     print(of_model)
