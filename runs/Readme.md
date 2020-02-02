@@ -11,7 +11,7 @@ To view the runs, simply start tensorboard via:
 - <b>TE small (trained by Anna):</b> results from the model `networks/temporal_encoder_small.py` and `networks/warp_model_small.py`
 - <b>Optical Flow (trained by Anna):</b> results from several optical flow models in the following subdirectries
     - Names containing <b>just\_of:</b> model `networks/network_just_of.py` 
-    - Names containing <b>of\_fc\_config\_tests:</b> model `networks/network_of_fc.py`
+    - Names containing <b>of\_fc:</b> model `networks/network_of_fc.py`
     - Names containing <b>of\_conv:</b> model `networks/network_of_conv.py`
 
 Each run has a unique identifier as folder name. This identifier can also be used to load the corresponding model, if it was saved in `saved_results/models`.
