@@ -7,7 +7,7 @@ To view the runs, simply start tensorboard via:
 # Naming conventions:
 
 - <b>Baseline (trained by Lukas):</b> results from the model `networks/baseline.py`
-- <b>TemporalEncoderII (trained by Lukas):</b> results from the model `networks/temporal_encoder_network.py` either with our without warp
+- <b>TemporalEncoderII (trained by Lukas):</b> results from the model `networks/temporal_encoder_network.py` either <b>with our without</b> warp
 - <b>TE small (trained by Anna):</b> results from the model `networks/temporal_encoder_small.py` and `networks/warp_model_small.py`
 - <b>Optical Flow (trained by Anna):</b> results from several optical flow models in the following subdirectries
     - Names containing <b>just\_of:</b> model `networks/network_just_of.py` 
