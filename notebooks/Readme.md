@@ -7,6 +7,7 @@
 ## 2. Select one of the jupyter notebooks for training/inference. 
 - Baseline Training (by Lukas): Train/Test our baseline model
 - Temporal Encoder Two Training (by Lukas): Train/Test the temporal encoder network (the suffix two can be ignored)
+- Optical Flow Training (by Anna): Train/Test any of the optical flow networks. Just select the network in the notebook.
 
 ## 3. When doing inference make sure that you have a pretrained model available
 - from our cloud storage: https://drive.google.com/drive/folders/1m_XR1HWRMkXv-pS2bUxo3hEHsMeJ3fxN?usp=sharing
