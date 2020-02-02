@@ -8,10 +8,6 @@ import numpy as np
 
 class WarpModelSmall(nn.Module):
     """
-    Simple transfer learning model that takes an imagenet pretrained model with
-    and adds a second conv block for all frames together afterwards
-
-    Adapted slightly from FaceForensics version: https://github.com/ondyari/FaceForensics/blob/master/classification/network/models.py
     """
 
     def __init__(self, model_choice='xception', num_frames=5, drop_blocks=8, image_shape=299):
