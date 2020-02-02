@@ -4,7 +4,7 @@ To view the runs, simply start tensorboard via:
 
 `tensorboard --logdir path/to/runs`
 
-# Naming conventions:
+# Naming conventions
 
 - <b>Baseline (trained by Lukas):</b> results from the model `networks/baseline.py`
 - <b>TemporalEncoderII (trained by Lukas):</b> results from the model `networks/temporal_encoder_network.py` either <b>with our without</b> warp
