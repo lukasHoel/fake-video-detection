@@ -1,3 +1,9 @@
+"""
+Authors: Anna Mittermair and Lukas Hoellein
+"""
+
+
+
 from utils.warp_image_farneback import calc_flow3D, calc_flow, calc_flow_mag_ang
 from skimage import io
 from torch.utils import data
