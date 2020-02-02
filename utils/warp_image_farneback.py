@@ -38,6 +38,9 @@ def calc_flow_mag_ang(img1, img2):
     flowma[:,:,layer][werte] =  np.arctan(flow[:,:,1][werte] / flow[:,:,0][werte])
     # Set all elements were flow[:,:,0] was 0 to 0 (so no division by 0)
     flowma[:,:,layer][nullen] = 3.1425269 / 2
+    
+    # Remove all remaining nans wherever they come from
+    flowma[np.isnan(flowma)] = 0
     return flowma
 
 def calc_flow3D(img1, img2, components=["x", "y", "angle"]):
