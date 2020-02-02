@@ -13,9 +13,27 @@ import numpy as np
 
 class WarpModelSmall(nn.Module):
     """
+    Two stage model:
+    Stage 1: Feature extraction on every warped frame using pretrained feature extraction networks, one per warp.
+    Stage 2: Concatenate features along a new dimension, downsample channels, then use several CNN layers.
+    Stage 3: Classification (FC) layer
+    
+    
+    Feature extraction blocks taken from networks/baseline.py 
+        --> (Adapted slightly from FaceForensics version: https://github.com/ondyari/FaceForensics/blob/master/classification/network/models.py)
+
+    Very similar to temporal_encoder_small, but using warp instead
     """
 
     def __init__(self, model_choice='xception', num_frames=5, drop_blocks=8, image_shape=299):
+        """
+        Parameters:
+            num_frames: number of frames to be used as the network input
+            drop_blocks: how many blocks from the feature extraction networks will not be used for feature extraction /
+                = stop after (16 - num_blocks) feature extraction blocks
+            image_shape: width/height of a quadratic input frame
+        """
+
         super(WarpModelSmall, self).__init__()
         self.num_frames = num_frames
         self.model_choice = model_choice
