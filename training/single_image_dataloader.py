@@ -1,3 +1,9 @@
+"""
+Authors: Anna Mittermair
+"""
+
+
+
 from skimage import io
 from torch.utils import data
 import torch
@@ -118,8 +124,9 @@ class ToTensor(object):
 if __name__ == '__main__':
     # test /example
     d = [
-            "/home/anna/Desktop/Uni/WiSe19/DL4CV/data/FaceForensics/set1/manipulated_sequences/Deepfakes/c40/sequences_128x128_skip_5_uniform",
-            "/home/anna/Desktop/Uni/WiSe19/DL4CV/data/FaceForensics/set1/original_sequences/youtube/c40/sequences_128x128_skip_5_uniform"]
+        "F:/Google Drive/FaceForensics_large/original_sequences/youtube/c40/sequences_299x299_10seq@10frames_skip_5_uniform/train",
+        "F:/Google Drive\FaceForensics_large/manipulated_sequences/Deepfakes/c40/sequences_299x299_10seq@10frames_skip_5_uniform/train"]
+
     test_dataset = FaceForensicsImagesDataset(d,transform=ToTensor())
     print(test_dataset.__len__())
     train_list, val_list = test_dataset.get_train_val_lists(0.9, 0.01)
