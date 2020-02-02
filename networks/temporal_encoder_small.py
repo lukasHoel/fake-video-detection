@@ -13,10 +13,14 @@ import numpy as np
 
 class ConcatBaselineModel(nn.Module):
     """
-    Simple transfer learning model that takes an imagenet pretrained model with
-    and adds a second conv block for all frames together afterwards
-
-    Adapted slightly from FaceForensics version: https://github.com/ondyari/FaceForensics/blob/master/classification/network/models.py
+    Two stage model:
+    Stage 1: Feature extraction on every frame using pretrained feature extraction networks, one per frame.
+    Stage 2: Concatenate features along a new dimension, downsample channels, then use several CNN layers.
+    Stage 3: Classification (FC) layer
+    
+    
+    Feature extraction blocks taken from networks/baseline.py 
+        --> (Adapted slightly from FaceForensics version: https://github.com/ondyari/FaceForensics/blob/master/classification/network/models.py)
     """
 
     def __init__(self, model_choice='xception', num_frames=5, drop_blocks=8, image_shape=299):
@@ -25,6 +29,8 @@ class ConcatBaselineModel(nn.Module):
         self.model_choice = model_choice
         self.first_stage_models = []
         first_stage_out_ftrs = 0
+        
+        # Feature extraction networks, one per frame
         for i in range(num_frames):
             if model_choice == 'xception':
                 model = xception()
@@ -52,11 +58,12 @@ class ConcatBaselineModel(nn.Module):
         self.temporal_encoder_output_channels = (output_image_size - 3 * 2) ** 2 * self.num_channels
 
         self.first_stage = nn.ModuleList(self.first_stage_models)
-        self.fc_end = nn.Sequential(nn.Linear(self.temporal_encoder_output_channels, 2), nn.Softmax())
-
+        
+        # Take only num_channels channels
         self.conv_red = nn.Conv3d(self.temporal_encoder_input_channels, self.num_channels, 1)
         self.conv_red_bn = nn.BatchNorm3d(self.num_channels)
-
+        
+        # CNN part on all frame features, 3D CNN because of new dimension for all frames
         self.conv1 = nn.Conv3d(self.num_channels, self.num_channels, 3)
         self.conv1_bn = nn.BatchNorm3d(self.num_channels)
 
@@ -72,6 +79,10 @@ class ConcatBaselineModel(nn.Module):
         else:
             self.conv3 = nn.Conv2d(self.num_channels, self.num_channels, 3)
             self.conv3_bn = nn.BatchNorm2d(self.num_channels)
+        
+        # FC layer    
+        self.fc_end = nn.Sequential(nn.Linear(self.temporal_encoder_output_channels, 2), nn.Softmax())
+
 
     def train_only_last_layer(self):
         self.set_trainable_up_to()
@@ -93,6 +104,8 @@ class ConcatBaselineModel(nn.Module):
 
     def forward(self, x):
         y = []
+        
+        # Take video frames as input
         x = x["image"]
         
         # Extract features
@@ -104,7 +117,7 @@ class ConcatBaselineModel(nn.Module):
             image_size = y_i.shape[3]
             y.append(y_i.view((-1, self.temporal_encoder_input_channels, image_size, image_size, 1)))
             
-        # Concat and reduce channels
+        # Concatenate and reduce channels
         y = torch.cat(y, dim=4)
         y = F.relu(self.conv_red_bn(self.conv_red(y)))
         
