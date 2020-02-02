@@ -1,3 +1,7 @@
+"""
+Authors: Anna Mittermair and Lukas Hoellein
+"""
+
 from networks.xception import xception
 import torch.nn.functional as F
 import torch.nn as nn
