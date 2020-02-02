@@ -1,6 +1,6 @@
 # Utils
 With the scripts contained here, you can create your own dataset from the official FaceForensics dataset. It will create sequences of images and can be configured as described below. <br><br>
-Additionally, this directory contains functions to create optical flow from images and contains preliminary testing results from using flownet2 as optical flow iimplementation.
+Additionally, this directory contains functions to create optical flow from images and contains preliminary testing results from using flownet2 as optical flow implementation.
 
 ## Author: Lukas Hoellein
 
