@@ -74,7 +74,7 @@ The results can be found in directory `OpticalFlow/test_results_of_conv`
 The runs corresponding to results in the table comparing different pairings for optical flow calculation can be found in directory `OpticalFlow/of_fc_config_tests`
 
 ### Resultsfor Optical Flow Representation not contained in the report (runs by Anna)
-Comparisons for different rpresentation of the Optical Flow using the components (x, y, magnitude, angle) can be found in directory `OpticalFlow/of_conv_compare_components`
+Comparisons for different representation of the Optical Flow using the components (x, y, magnitude, angle) can be found in directory `OpticalFlow/of_conv_compare_components`
 
 ### Results not contained in the report but in past presentations (runs by Anna)
 Some results shown in past presentations can be found in directory `TE_small`
