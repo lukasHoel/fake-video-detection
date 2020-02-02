@@ -7,6 +7,6 @@
 - `xception.py` (pretrained feature extractor): used by all networks as pretrained feature extractor
 
 # What were the other networks used for?
-- `network_just_of.py` (by Anna): training of an experimental network only using optical flow instead of frames themselves (with expectedly bad results, which lead to choosing the two branch models). Also used for trying different parameters for the Farneback method. 
-- `temporal_encoder_small.py` (by Anna): training of the small version of the temporal encoder without warp --> see Presentation 2
-- `warp_model_small.py` (by Anna): training of the small version of the temporal encoder using warp --> see Presentation 2
+- `network_just_of.py` (by Anna): Training of an experimental network only using optical flow instead of frames themselves (with expectedly bad results, which lead to choosing the two branch models). Also used for trying different parameters for the Farneback method. 
+- `temporal_encoder_small.py` (by Anna): Training of the small version of the temporal encoder without warp. --> See Presentation 2
+- `warp_model_small.py` (by Anna): Training of the small version of the temporal encoder using warp. --> See Presentation 2
