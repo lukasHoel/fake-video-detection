@@ -67,10 +67,10 @@ Here we show the results of testing different values of the delta_t parameter an
 - `2020-Jan-11_20_57_38_fffc4a7a-34b4-11ea-a605-0242ac1c0002`
 - `2020-Jan-11_23_13_19_f47d3188-34c7-11ea-a605-0242ac1c0002`
 
-## Tables 1 and 2 in report (runs by Anna)
+## Optical Flow results from Table 2 (runs by Anna)
 The final results using optical flow can be found in directory `OpticalFlow/test_results_of_conv`.
 
-## Table 4 (runs by Anna)
+## Optical Flow configurations from Table 4 (runs by Anna)
 The runs corresponding to results in the table comparing different frame pairings for optical flow calculation can be found in directory `OpticalFlow/of_fc_config_tests`.
 
 ## Results for Optical Flow Representation not contained in the report (runs by Anna)
