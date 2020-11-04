@@ -2,7 +2,7 @@
 <b>Authors:</b> Anna Mittermair and Lukas Hoellein <br>
 <b>Supervisor:</b> Maxim Maximov
 
-(See files for a more specific matching of authorship to certain parts of the project. This might help to resolve any questions that might come up while studying our project code.)
+Final report: [Low-Resolution Fake Video Detection](Low_Resolution_Fake_Video_Detection.pdf)
 
 ## Low-Resolution Fake Video Detection
 
